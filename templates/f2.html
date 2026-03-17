@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>F2 — Dashboard</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .f2-hero {
+      background: linear-gradient(135deg, rgba(255,107,53,0.12), var(--bg2));
+      border: 1px solid rgba(255,107,53,0.3);
+      border-radius: var(--r2);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      position: relative; overflow: hidden;
+    }
+    .f2-hero::before {
+      content: 'F2'; position: absolute; right: 1rem; top: 50%;
+      transform: translateY(-50%);
+      font-family: var(--font-display); font-size: 6rem; font-weight: 900;
+      color: rgba(255,107,53,0.08); line-height: 1;
+    }
+    .f2-hero-label {
+      font-family: var(--font-display); font-size: 0.65rem; font-weight: 800;
+      letter-spacing: 3px; text-transform: uppercase; color: #ff6b35;
+      margin-bottom: 0.4rem;
+    }
+    .f2-hero-title {
+      font-family: var(--font-display); font-size: 1.8rem; font-weight: 900; line-height: 1.1;
+    }
+    .f2-hero-sub { font-size: 0.82rem; color: var(--txt3); margin-top: 0.3rem; }
+
+    .cal-row-f2 { border-left: 3px solid #ff6b35 !important; }
+    .cal-row-f2:hover { border-color: #ff6b35 !important; }
+    .f2-note {
+      background: rgba(255,107,53,0.08);
+      border: 1px solid rgba(255,107,53,0.2);
+      border-radius: var(--r); padding: 1rem 1.25rem;
+      font-size: 0.82rem; color: var(--txt2); margin-bottom: 1.5rem;
+    }
+    .driver-rookie { font-size: 0.6rem; background: rgba(255,215,0,0.15); color: var(--gold); padding: 1px 5px; border-radius: 3px; margin-left: 4px; font-weight: 700; }
+  </style>
+</head>
+<body>
+<nav class="topnav">
+  <a class="nav-logo" href="/" style="display:flex;align-items:center;gap:8px">
+    <svg width="26" height="26" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="13" fill="#e10600"/><path d="M7 14h14M14 7v14" stroke="white" stroke-width="2.5" stroke-linecap="round"/><circle cx="14" cy="14" r="3" fill="white"/></svg>
+    <span style="font-family:var(--font-display);font-size:1.25rem;font-weight:900;letter-spacing:-0.5px">F1<span style="color:var(--red)">FOR</span>LIVE</span>
+  </a>
+  <ul class="nav-links" id="nav-links">
+    <li><a href="/">Home</a></li><li><a href="/stats">Stats 2026</a></li>
+    <li><a href="/calendar" >Kalender</a></li><li><a href="/live" >Live</a></li>
+    <li><a href="/compare">Vergelijk</a></li><li><a href="/map">Kaart</a></li>
+    <li><a href="/predictor">Prognose</a></li><li><a href="/timeline">Tijdlijn</a></li>
+    <li><a href="/f2" class="active">F2</a></li><li><a href="/history">Archief</a></li>
+    <li><a href="/info">Info</a></li>
+  </ul>
+  <div class="live-pill"><div class="live-dot"></div><span>Live</span></div>
+  <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+</nav>
+<script>
+(function(){
+  var h=document.getElementById('nav-hamburger'),n=document.getElementById('nav-links');
+  if(h)h.addEventListener('click',function(){h.classList.toggle('open');n.classList.toggle('open');});
+  document.querySelectorAll('.nav-links a').forEach(function(a){a.addEventListener('click',function(){h&&h.classList.remove('open');n&&n.classList.remove('open');});});
+})();
+</script>
+
+<div class="page">
+  <div class="f2-hero">
+    <div class="f2-hero-label">🏎 Formula 2 — 2026</div>
+    <div class="f2-hero-title">FIA Formula 2 Kampioenschap</div>
+    <div class="f2-hero-sub">De springplank naar Formule 1 — races bij elk F1-weekend</div>
+  </div>
+
+  <div class="f2-note">
+    ℹ️ <strong>Databron:</strong> F2 rijdt op dezelfde circuits en weekenden als F1. Live timing via OpenF1 wanneer beschikbaar. Standen worden bijgehouden via de officiële F2-kalender.
+  </div>
+
+  <div class="tab-root">
+    <div class="tabs" id="f2-tabs">
+      <button class="tab-btn active" data-tab="f2-calendar">Kalender</button>
+      <button class="tab-btn" data-tab="f2-info">Over F2</button>
+    </div>
+
+    <div class="tab-pane active" id="f2-calendar">
+      <div class="section-label">F2 Racekalender 2026</div>
+      <div id="f2-cal-content"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
+
+    <div class="tab-pane" id="f2-info">
+      <div class="grid-2" style="margin-bottom:1.5rem">
+        <div class="card">
+          <div class="card-head"><span class="card-title">Over Formula 2</span></div>
+          <div class="card-body" style="font-size:0.85rem;color:var(--txt2);line-height:1.7">
+            <p style="margin-bottom:0.75rem">FIA Formula 2 is de hoogste klasse direct onder Formule 1. Het is de voornaamste stap voor coureurs die de <strong style="color:var(--txt)">superlicentiepunten</strong> willen verdienen die nodig zijn voor een F1-zitje.</p>
+            <p style="margin-bottom:0.75rem">Een F2-seizoen bestaat uit <strong style="color:var(--txt)">Feature Races</strong> (punten 1–10 + pole + snelste ronde) en <strong style="color:var(--txt)">Sprint Races</strong> (punten 1–8) — beide op hetzelfde weekend als de F1-race.</p>
+            <p>Alle coureurs rijden in identieke <strong style="color:var(--txt)">Dallara F2 2024</strong> chassis, zodat het puur talent is dat het verschil maakt.</p>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><span class="card-title">Puntenstructuur</span></div>
+          <div class="card-body">
+            <div class="section-label">Feature Race</div>
+            <table class="f1-table" style="margin-bottom:1rem">
+              <thead><tr><th>Pos</th><th>Punten</th><th>Bonus</th></tr></thead>
+              <tbody>
+                <tr><td class="pos" style="color:var(--gold)">1</td><td class="pts">25</td><td style="color:var(--txt3)">+1 pol · +1 snelste</td></tr>
+                <tr><td class="pos" style="color:var(--silver)">2</td><td class="pts">18</td><td></td></tr>
+                <tr><td class="pos" style="color:var(--bronze)">3</td><td class="pts">15</td><td></td></tr>
+                <tr><td class="pos">4–10</td><td class="pts">12→1</td><td></td></tr>
+              </tbody>
+            </table>
+            <div class="section-label">Sprint Race</div>
+            <table class="f1-table">
+              <thead><tr><th>Pos</th><th>Punten</th></tr></thead>
+              <tbody>
+                <tr><td class="pos" style="color:var(--gold)">1</td><td class="pts">10</td></tr>
+                <tr><td class="pos" style="color:var(--silver)">2</td><td class="pts">8</td></tr>
+                <tr><td class="pos" style="color:var(--bronze)">3</td><td class="pts">6</td></tr>
+                <tr><td class="pos">4–8</td><td class="pts">5→1</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><span class="card-title">F1-kampioenen begonnen in F2 (GP2)</span></div>
+        <div class="card-body">
+          <table class="f1-table">
+            <thead><tr><th>Coureur</th><th>F2/GP2 titel</th><th>F1 debuut</th><th>F1 titels</th></tr></thead>
+            <tbody>
+              <tr><td><div class="driver-cell"><div class="team-bar" style="background:#E8002D"></div><div class="driver-name">Charles Leclerc</div></div></td><td class="pts" style="color:var(--gold)">2017</td><td style="color:var(--txt3)">2018</td><td>—</td></tr>
+              <tr><td><div class="driver-cell"><div class="team-bar" style="background:#FF8000"></div><div class="driver-name">Lando Norris</div></div></td><td style="color:var(--txt3)">Vice 2018</td><td style="color:var(--txt3)">2019</td><td>—</td></tr>
+              <tr><td><div class="driver-cell"><div class="team-bar" style="background:#27F4D2"></div><div class="driver-name">George Russell</div></div></td><td class="pts" style="color:var(--gold)">2018</td><td style="color:var(--txt3)">2019</td><td>—</td></tr>
+              <tr><td><div class="driver-cell"><div class="team-bar" style="background:#3671C6"></div><div class="driver-name">Max Verstappen</div></div></td><td style="color:var(--txt3)">Sloeg over</td><td style="color:var(--txt3)">2015</td><td style="color:var(--gold)">4×</td></tr>
+              <tr><td><div class="driver-cell"><div class="team-bar" style="background:#27F4D2"></div><div class="driver-name">Nico Rosberg</div></div></td><td class="pts" style="color:var(--gold)">2005</td><td style="color:var(--txt3)">2006</td><td style="color:var(--gold)">1×</td></tr>
+              <tr><td><div class="driver-cell"><div class="team-bar" style="background:#E8002D"></div><div class="driver-name">Kimi Räikkönen</div></div></td><td style="color:var(--txt3)">Formule 3</td><td style="color:var(--txt3)">2001</td><td style="color:var(--gold)">1×</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+<script>
+initTabsIn(document.querySelector('.tab-root'));
+
+async function loadF2Calendar() {
+  const data = await get('/api/f2/calendar');
+  const wrap = el('f2-cal-content');
+  if (!data?.length) { empty('f2-cal-content','🏎','Geen kalenderdata'); return; }
+
+  let lastMonth = -1, nextFound = false;
+  let html = '<div class="cal-list">';
+  const MONTH_NL = ['Januari','Februari','Maart','April','Mei','Juni','Juli','Augustus','September','Oktober','November','December'];
+
+  for (const r of data) {
+    const m = monthOf(r.date);
+    if (m !== lastMonth) {
+      html += `<div class="month-sep">${MONTH_NL[m]}</div>`;
+      lastMonth = m;
+    }
+    const isNext = !r.past && !nextFound;
+    if (isNext) nextFound = true;
+    const days = daysUntil(r.date);
+    const stripeClass = r.past ? 'done' : isNext ? 'next' : 'future';
+    const rowClass = r.past ? 'past' : isNext ? 'next' : '';
+
+    html += `<div class="cal-row ${rowClass} cal-row-f2">
+      <div class="cal-rnd">R<span>${r.round}</span></div>
+      <div class="cal-stripe ${stripeClass}" style="${isNext?'':''}"></div>
+      <div class="cal-info">
+        <div class="cal-name">${flag(r.country)} ${r.name.replace('F2','F2 —')}</div>
+        <div class="cal-meta"><span>${r.circuit}</span><span>${r.country}</span><span>Feature + Sprint</span></div>
+      </div>
+      <div class="cal-right">
+        <div class="cal-date">${fmtDate(r.date)}</div>
+        ${r.past ? '<div class="cal-done">✓ Verreden</div>' : `<div class="cal-days">Nog ${days}d</div>`}
+      </div>
+    </div>`;
+  }
+  html += '</div>';
+  wrap.innerHTML = html;
+}
+
+loadF2Calendar();
+</script>
+</body>
+</html>

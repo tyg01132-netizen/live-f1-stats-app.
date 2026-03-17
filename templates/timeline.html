@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tijdlijn & Export — F1FORLIVE</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .tl-track { position:relative;padding-left:2.5rem; }
+    .tl-track::before { content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--red),rgba(225,6,0,0.1)); }
+    .tl-decade { font-family:var(--font-display);font-size:0.62rem;font-weight:900;letter-spacing:3px;text-transform:uppercase;color:var(--txt3);margin:1.5rem 0 0.75rem -2rem;padding-left:1rem;border-top:1px solid var(--border);padding-top:0.75rem; }
+    .tl-item { position:relative;margin-bottom:0.5rem; }
+    .tl-dot { position:absolute;left:-2rem;top:0.8rem;width:10px;height:10px;border-radius:50%;background:var(--bg4);border:2px solid var(--bg5);transition:all 0.15s;cursor:pointer; }
+    .tl-item:hover .tl-dot,.tl-item.open .tl-dot { background:var(--red);border-color:var(--red); }
+    .tl-card { background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:border-color 0.15s;cursor:pointer; }
+    .tl-item:hover .tl-card,.tl-item.open .tl-card { border-color:rgba(225,6,0,0.3); }
+    .tl-head { display:flex;align-items:baseline;gap:0.75rem;padding:0.7rem 1rem; }
+    .tl-year-badge { font-family:var(--font-display);font-size:0.9rem;font-weight:900;color:var(--red);min-width:38px; }
+    .tl-title { font-size:0.85rem;font-weight:700; }
+    .tl-champ { font-size:0.72rem;color:var(--txt3);margin-left:auto;flex-shrink:0; }
+    .tl-body { display:none;padding:0.75rem 1rem;border-top:1px solid var(--border);font-size:0.82rem;color:var(--txt2);line-height:1.7; }
+    .tl-item.open .tl-body { display:block; }
+    .tl-tags { margin-top:0.5rem;display:flex;gap:0.4rem;flex-wrap:wrap; }
+    .tl-tag { background:var(--bg4);color:var(--txt3);font-size:0.6rem;font-weight:700;padding:2px 7px;border-radius:3px; }
+    .tl-tag-red { background:rgba(225,6,0,0.1);color:var(--red);border:1px solid rgba(225,6,0,0.2); }
+
+    .export-card { background:var(--bg2);border:1px solid rgba(39,244,210,0.2);border-radius:var(--r2);padding:1.5rem;margin-bottom:2rem; }
+    .ics-preview { background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:1rem;font-family:var(--font-mono);font-size:0.72rem;color:var(--txt3);margin-top:0.75rem;max-height:180px;overflow-y:auto; }
+  </style>
+</head>
+<body>
+<nav class="topnav">
+  <a class="nav-logo" href="/" style="display:flex;align-items:center;gap:8px">
+    <svg width="26" height="26" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="13" fill="#e10600"/><path d="M7 14h14M14 7v14" stroke="white" stroke-width="2.5" stroke-linecap="round"/><circle cx="14" cy="14" r="3" fill="white"/></svg>
+    <span style="font-family:var(--font-display);font-size:1.25rem;font-weight:900;letter-spacing:-0.5px">F1<span style="color:var(--red)">FOR</span>LIVE</span>
+  </a>
+  <ul class="nav-links" id="nav-links">
+    <li><a href="/">Home</a></li><li><a href="/stats">Stats 2026</a></li>
+    <li><a href="/calendar">Kalender</a></li><li><a href="/live">Live</a></li>
+    <li><a href="/compare">Vergelijk</a></li><li><a href="/map">Kaart</a></li>
+    <li><a href="/predictor">Prognose</a></li><li><a href="/timeline" class="active">Tijdlijn</a></li>
+    <li><a href="/f2">F2</a></li><li><a href="/history">Archief</a></li><li><a href="/info">Info</a></li>
+  </ul>
+  <div class="live-pill"><div class="live-dot"></div><span>Live</span></div>
+  <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+</nav>
+<script>
+(function(){
+  var h=document.getElementById('nav-hamburger'),n=document.getElementById('nav-links');
+  if(h)h.addEventListener('click',function(){h.classList.toggle('open');n.classList.toggle('open');});
+  document.querySelectorAll('.nav-links a').forEach(function(a){a.addEventListener('click',function(){h&&h.classList.remove('open');n&&n.classList.remove('open');});});
+})();
+</script>
+
+<div class="page">
+  <div class="tab-root">
+    <div class="tabs" id="tl-tabs">
+      <button class="tab-btn active" data-tab="tl-history">📜 F1 Tijdlijn</button>
+      <button class="tab-btn" data-tab="tl-export">📅 Kalender Export</button>
+    </div>
+
+    <!-- TIMELINE -->
+    <div class="tab-pane active" id="tl-history">
+      <div class="page-title" style="margin-bottom:0.5rem">F1 Tijdlijn 1950–2026</div>
+      <div class="page-sub" style="margin-bottom:1.5rem">Klik op een jaar voor het verhaal — kampioenen, crashes, revoluies, records</div>
+      <div id="tl-content"></div>
+    </div>
+
+    <!-- ICS EXPORT -->
+    <div class="tab-pane" id="tl-export">
+      <div class="export-card">
+        <div style="font-family:var(--font-display);font-size:1.2rem;font-weight:900;margin-bottom:0.35rem">📅 Kalender exporteren</div>
+        <div style="font-size:0.85rem;color:var(--txt2);margin-bottom:1rem">Download het volledige F1-seizoen 2026 als .ics bestand — importeer in Google Calendar, Apple Calendar of Outlook. Alle races en sessies inbegrepen.</div>
+        <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-bottom:1rem">
+          <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;cursor:pointer">
+            <input type="checkbox" id="inc-fp" checked> Vrije trainingen
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;cursor:pointer">
+            <input type="checkbox" id="inc-quali" checked> Kwalificatie
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;cursor:pointer">
+            <input type="checkbox" id="inc-sprint" checked> Sprint races
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;cursor:pointer">
+            <input type="checkbox" id="inc-race" checked> Races
+          </label>
+        </div>
+        <button class="btn btn-red" id="gen-ics-btn" style="width:100%">📥 Genereer en download .ics</button>
+        <div id="ics-preview-wrap" style="display:none">
+          <div style="font-size:0.72rem;color:var(--txt3);margin-top:0.75rem;margin-bottom:0.35rem">Preview:</div>
+          <div class="ics-preview" id="ics-preview"></div>
+        </div>
+      </div>
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:1.25rem">
+        <div style="font-size:0.82rem;font-weight:700;margin-bottom:0.5rem">📱 Importeren in agenda</div>
+        <div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.8rem;color:var(--txt2)">
+          <div><strong style="color:var(--txt)">Google Calendar:</strong> Instellingen → Andere agenda's → Importeren → .ics kiezen</div>
+          <div><strong style="color:var(--txt)">Apple Calendar:</strong> Bestand → Importeer → .ics selecteren</div>
+          <div><strong style="color:var(--txt)">Outlook:</strong> Bestand → Openen en exporteren → Importeren/Exporteren → iCalendar importeren</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+<script>
+initTabsIn(document.querySelector('.tab-root'));
+
+const TIMELINE = [
+  { year:1950, champ:'Giuseppe Farina', team:'Alfa Romeo', title:'De geboorte van Formule 1', text:'Op 13 mei 1950 rijdt de eerste officiële Grand Prix op Silverstone. King George VI staat op de tribune. Alfa Romeo domineert volledig. Farina wint het allereerste kampioenschap.', tags:['Eerste seizoen','Silverstone','King George VI','Alfa Romeo'] },
+  { year:1951, champ:'Juan Manuel Fangio', team:'Alfa Romeo', title:'Fangio — de eerste van vijf', text:'Juan Manuel Fangio uit Argentinië wint zijn eerste van vijf wereldtitels. Alfa Romeo en Ferrari strijden om de overwinning. Het begin van het Fangio-tijdperk.', tags:['Fangio 1e titel','Alfa vs Ferrari'] },
+  { year:1954, champ:'Juan Manuel Fangio', team:'Maserati/Mercedes', title:'Mercedes terugkeer', text:'Mercedes-Benz keert terug in de Grand Prix racing voor het eerst na WOII. Met Fangio en Moss domineren ze onmiddellijk. De W196 is technisch ver vooruit op de concurrentie.', tags:['Mercedes comeback','W196','Fangio','Stirling Moss debuut'] },
+  { year:1958, champ:'Mike Hawthorn', team:'Ferrari', title:'Eerste Britse kampioen', text:'Mike Hawthorn wordt de eerste Britse Formule 1-kampioen — met slechts één punt voorsprong op Stirling Moss. Hawthorn trekt zich direct daarna terug en sterft in een auto-ongeluk maanden later.', tags:['Eerste Britse kampioen','Hawthorn','1 punt verschil','Tragisch einde'] },
+  { year:1961, champ:'Phil Hill', team:'Ferrari', title:'Eerste Amerikaanse kampioen', text:'Phil Hill wordt de eerste en enige Amerikaanse Formule 1-kampioen. Zijn teamgenoot Wolfgang von Trips overlijdt bij een crash in Monza — op het moment dat hij zelf de titel leek te pakken.', tags:['Eerste Amerikaan','Von Trips-tragedie','Monza crash','Ferrari dominantie'] },
+  { year:1976, champ:'James Hunt', team:'McLaren', title:'RUSH — Het legendarische duel', text:'Niki Lauda crasht op de Nürburgring en vat vuur. Zijn gezicht verbrand, zijn longen beschadigd. Hij mist twee races. Dan keert hij terug — en verliest de titel aan Hunt met één punt op de allerlaatste race in de Japanse regen. Lauda stapt uit. Te gevaarlijk.', tags:['Lauda-crash','Rush','James Hunt','Nürburgring','1 punt verschil'] },
+  { year:1977, champ:'Niki Lauda', team:'Ferrari', title:'Lauda\'s comeback-kroon', text:'Niki Lauda wint zijn tweede titel na zijn bijna-fatale crash een jaar eerder. Eén van de meest bewonderenswaardige prestaties in de sportgeschiedenis — pure wilskracht.', tags:['Comeback','Lauda 2e titel','Ferrari','Mentale kracht'] },
+  { year:1979, champ:'Jody Scheckter', team:'Ferrari', title:'Scheckter en de 312T4', text:'De Zuid-Afrikaan Jody Scheckter wint voor Ferrari — hun laatste constructeurstitel in de moderne aero-era (tot 2008). De Ferrari 312T4 is een perfecte evolutie van een succesformule.', tags:['Ferrari constructeurstitel','Zuid-Afrika','Scheckter','312T4'] },
+  { year:1982, champ:'Keke Rosberg', team:'Williams', title:'Turbo-revolutie begint', text:'Het turbotijdperk begint serieus. Renault, Ferrari en Brabham-BMW brengen turbomotoren. Rosberg wint slechts één race maar is extreem consistent. Het meest open kampioenschap van zijn era — 11 verschillende winnaars.', tags:['Turbo-era begin','11 verschillende winnaars','Keke Rosberg','Williams'] },
+  { year:1984, champ:'Niki Lauda', team:'McLaren', title:'Half punt — nauwste ooit', text:'Niki Lauda wint zijn derde titel met exact een halve punt voorsprong op Alain Prost. Beide rijden voor McLaren. De race in Monaco wordt te vroeg afgevlagd — Prost had anders gewonnen. Lauda is kampioen voor de derde keer.', tags:['0.5 punt marge','Lauda 3e titel','Prost','McLaren','Monaco afgevlagd'] },
+  { year:1986, champ:'Alain Prost', team:'McLaren', title:'Williams-motorexplosie finale', text:'Nigel Mansell heeft de titel bijna zeker in Adelaide. Dan spat zijn band open aan 300 km/u. Keke Rosberg stopt voor zekerheid. Prost rijdt door en wint de titel die hem eigenlijk niet toebehoorde.', tags:['Mansell band ontploft','Adelaide','Prost','Williams-ramp','Dramatische finale'] },
+  { year:1988, champ:'Ayrton Senna', team:'McLaren', title:'McLaren wint 15 van 16 races', text:'De meest dominante seizoen in F1-geschiedenis. McLaren-Honda wint 15 van de 16 races. Senna en Prost zijn teamgenoten en aartsrivalen. Senna wint de titel. De motor is ongekend snel. Het begin van de mooiste rivaliteit in de sport.', tags:['15/16 overwinningen','Senna vs Prost','McLaren-Honda','Turbo-era einde'] },
+  { year:1989, champ:'Alain Prost', team:'McLaren', title:'Senna vs Prost — de botsingfinale', text:'Senna en Prost botsen in de laatste chicane van de laatste race in Japan. Senna rijdt door, wordt gedisqualificeerd. Prost is kampioen. De start van de bitterste vete in F1-geschiedenis.', tags:['Suzuka botsing','Gediskwalificeerd','Senna-Prost vete','Controversieel'] },
+  { year:1990, champ:'Ayrton Senna', team:'McLaren', title:'Wraak in bocht 1', text:'Senna neemt wraak. Hij botst in de eerste bocht van Japan met Prost — opzettelijk, naar eigen zeggen voor zekerheid. Beide vallen uit. Senna is kampioen. Prost verlaat McLaren woedend.', tags:['Bocht 1 Japan','Senna wraak','Prost naar Ferrari','Opzettelijk?'] },
+  { year:1991, champ:'Ayrton Senna', team:'McLaren', title:'Senna\'s derde en laatste', text:'Senna wint zijn derde en laatste wereldtitel. Zijn rivaliteit met Mansell en de debutant Schumacher is de subplot van het seizoen. De McLaren-Honda is nog steeds competitief maar Williams begint te dreigen.', tags:['Senna 3e titel','Schumacher debuut','Mansell rivaliteit','McLaren-Honda'] },
+  { year:1992, champ:'Nigel Mansell', team:'Williams', title:'Mansell-manie en recordjaar', text:'Nigel Mansell doet wat hij altijd had verdiend: 9 overwinningen in één seizoen (record), de vroegste titelverovering in de geschiedenis. De FW14B is de meest geavanceerde auto die ooit gebouwd was. Daarna vertrekt Mansell naar IndyCar.', tags:['9 overwinningen','FW14B','Record','Williams dominantie','Mansell naar Indy'] },
+  { year:1994, champ:'Michael Schumacher', team:'Benetton', title:'Het zwartste weekend', text:'San Marino Grand Prix 1994. Vrijdag verongelukt Roland Ratzenberger tijdens kwalificatie. Zondag valt Ayrton Senna bij hoge snelheid uit op Tamburello. Hij sterft later. F1 wordt nooit meer hetzelfde. Max Mosley hervormt de veiligheid volledig.', tags:['Senna-overlijden','Ratzenberger','San Marino 94','Veiligheidsrevolutie','Nooit vergeten'] },
+  { year:1997, champ:'Jacques Villeneuve', team:'Williams', title:'Schumacher gediskwalificeerd', text:'Michael Schumacher rijdt in Jerez bewust in Villeneuve om hem van de baan te drukken. Schumacher valt uit. Villeneuve finisht derde en is kampioen. De FIA diskwalificeert Schumacher uit het eindklassement — een unieke straf.', tags:['Schumacher gediskwalificeerd','Jerez','Villeneuve kampioen','Bewuste botsing'] },
+  { year:2000, champ:'Michael Schumacher', team:'Ferrari', title:'Ferrari\'s lange wacht voorbij', text:'Na 21 jaar zonder coureurstitel verlost Schumacher Ferrari. Hij weent op de grid in Japan. Het begin van een ongekende dynasty: vijf titels op rij gaan volgen. Niemand weet dat nog.', tags:['Ferrari 21 jaar','Schumacher tranen Japan','Begin dynasty'] },
+  { year:2005, champ:'Fernando Alonso', team:'Renault', title:'Jongste kampioen ooit (toen)', text:'Fernando Alonso, 24 jaar, wordt de jongste wereldkampioen in de geschiedenis (record later verbroken door Vettel). Renault verslaat het dominante Ferrari. Het begin van de Alonso-era.', tags:['Jongste kampioen','Alonso 1e titel','Renault','Ferrari verslaan'] },
+  { year:2007, champ:'Kimi Räikkönen', team:'Ferrari', title:'Räikkönen steelt de titel', text:'Hamilton leidt met 17 punten voorsprong en twee races te gaan. Dan implodeert McLaren in China en Japan. Räikkönen wint de laatste twee races en de titel met één punt. Hamilton is gebroken.', tags:['Räikkönen sloopcar','McLaren-implosie','1 punt marge','Hamilton hartbreker'] },
+  { year:2008, champ:'Lewis Hamilton', team:'McLaren', title:'De laatste bocht van Brazilië', text:'Hamilton moet vijfde worden in Brazilië voor de titel. Massa wint de race, jubelt al. Dan haalt Hamilton Glock in op de allerlaatste bocht — P5, één punt genoeg. Hamilton is kampioen. Het meest intense slot in F1-geschiedenis.', tags:['Laatste bocht','Glock','1 punt','Hamilton 1e titel','Massa-tragedie'] },
+  { year:2009, champ:'Jenson Button', team:'Brawn GP', title:'Het sprookje van Brawn GP', text:'Honda trekt zich terug. Ross Brawn koopt het team voor een symbolisch bedrag. Met een geheime double-diffuser domineert Brawn GP de eerste helft. Button wint zes van de eerste zeven races. Een onmogelijk verhaal dat toch uitkwam.', tags:['Brawn GP sprookje','Double-diffuser','Honda exit','Button'] },
+  { year:2010, champ:'Sebastian Vettel', team:'Red Bull', title:'Vettel op de valreep', text:'Abu Dhabi, laatste race. Alonso leidt het kampioenschap maar zit vast achter Petrov. Vettel wint de race en is kampioen. Jongste kampioen ooit op dat moment: 23 jaar. Red Bull begint zijn dynasty.', tags:['Alonso vast achter Petrov','Vettel jongste','Abu Dhabi thriller','Red Bull opkomst'] },
+  { year:2016, champ:'Nico Rosberg', team:'Mercedes', title:'De Mercedes burgeroorlog', text:'Hamilton vs. Rosberg bereikt een absolute climax. Barcelona: ze botsen op lap 1. Rosberg wint het kampioenschap, kondigt vijf dagen later zijn pensioen aan. Hamilton is volledig van de kaart. Een unieke exit.', tags:['Hamilton vs Rosberg','Barcelona botsing','Rosberg pensioen','Burgeroorlog Mercedes'] },
+  { year:2021, champ:'Max Verstappen', team:'Red Bull', title:'Abu Dhabi — het seizoen van het decennium', text:'Laatste ronde, gelijkstand op punten. Safety car, herstart, Verstappen passeert Hamilton op de allerlaatste ronde van het seizoen. Een avond die Formule 1 splitste in twee kampen. Race director Michael Masi verdwijnt daarna.', tags:['Laatste ronde','Safety car controverse','Verstappen vs Hamilton','Michael Masi','Gelijkstand punten'] },
+  { year:2022, champ:'Max Verstappen', team:'Red Bull', title:'Verstappen wordt onstopbaar', text:'De RB18 is de dominante auto van het jaar. Verstappen wint 15 races en verbetert meerdere records. De concurrentie is hopeloos ver weg. Ferrari toont flitsen van snelheid maar maakt strategische fouten.', tags:['15 overwinningen','RB18 dominantie','Ferrari-strategiefouten','New era auto'] },
+  { year:2023, champ:'Max Verstappen', team:'Red Bull', title:'19 overwinningen — absoluut record', text:'Negentien overwinningen in 22 races — nooit eerder vertoond. De RB19 is de beste auto in de geschiedenis van de sport. Verstappen breekt elk record. De enige spanning is intern: Perez vs. Verstappen.', tags:['19/22 overwinningen','Absoluut record','RB19','Vroegste titelverovering','Red Bull intern'] },
+  { year:2024, champ:'Max Verstappen', team:'Red Bull', title:'Vierde titel in onzekerheid', text:'McLaren en Ferrari worden serieuze concurrenten na de zomerstop. Verstappen worstelt maar zijn consistentie in punten scoren is ongekend. Vier titels op rij — evenaart Vettel en Prost.', tags:['Verstappen 4e titel','McLaren opkomst','Ferrari challenge','Red Bull worstelt'] },
+  { year:2025, champ:'—', team:'—', title:'Seizoen 2025', text:'Het meest competitieve grid in jaren. McLaren, Ferrari, Mercedes en Red Bull strijden gelijkwaardig. Het eerste seizoen in jaren zonder duidelijke dominante auto.', tags:['Meest competitief','4 teams gelijkwaardig','2025 seizoen'] },
+  { year:2026, champ:'Lopend', team:'Lopend', title:'Seizoen 2026 — nieuw tijdperk', text:'Volledig nieuw motorreglement: 50/50 verbrandingsmotor/elektrisch, geen MGU-H. Cadillac als 11e team. Audi overneemt Sauber. Het begin van een nieuw hoofdstuk in F1-geschiedenis.', tags:['Nieuw motorreglement','Cadillac debuut','Audi','50/50 hybride','Huidig seizoen'] },
+];
+
+function buildTimeline() {
+  const wrap = el('tl-content');
+  let currentDecade = -1;
+  let html = '<div class="tl-track">';
+
+  TIMELINE.forEach((item,i) => {
+    const decade = Math.floor(item.year/10)*10;
+    if (decade !== currentDecade) {
+      currentDecade = decade;
+      html += `<div class="tl-decade">${decade}s</div>`;
+    }
+    const isRecent = item.year >= 2020;
+    const hasCurrent = item.year === 2026;
+    html += `<div class="tl-item" id="tl-${item.year}" onclick="toggleTL(${i})">
+      <div class="tl-dot" style="${isRecent?'background:rgba(225,6,0,0.4);border-color:rgba(225,6,0,0.5)':''}"></div>
+      <div class="tl-card">
+        <div class="tl-head">
+          <div class="tl-year-badge">${item.year}</div>
+          <div class="tl-title">${item.title}</div>
+          <div class="tl-champ">${item.champ !== 'Lopend' && item.champ !== '—' ? '👑 ' + item.champ.split(' ').pop() : item.champ}</div>
+        </div>
+        <div class="tl-body">
+          <div>${item.text}</div>
+          <div class="tl-tags">
+            ${item.tags.map(t=>`<span class="tl-tag">${t}</span>`).join('')}
+            ${item.champ !== 'Lopend' && item.champ !== '—' ? `<span class="tl-tag tl-tag-red">👑 ${item.champ} — ${item.team}</span>` : ''}
+          </div>
+          ${item.year >= 1980 && item.year <= 2025 ? `<div style="margin-top:0.75rem"><a href="/history?y=${item.year}" style="font-size:0.75rem;color:var(--red);font-weight:700">Bekijk seizoen ${item.year} →</a></div>` : ''}
+        </div>
+      </div>
+    </div>`;
+  });
+
+  html += '</div>';
+  wrap.innerHTML = html;
+
+  // Auto-open 2021 as example
+  toggleTL(TIMELINE.findIndex(t=>t.year===2021));
+}
+
+function toggleTL(idx) {
+  const item = TIMELINE[idx];
+  const el_item = document.getElementById('tl-' + item.year);
+  if (!el_item) return;
+  el_item.classList.toggle('open');
+}
+
+// ── ICS Export ──────────────────────────────────────────────────────────────
+el('gen-ics-btn').onclick = async () => {
+  const incFP    = document.getElementById('inc-fp').checked;
+  const incQuali = document.getElementById('inc-quali').checked;
+  const incSprint= document.getElementById('inc-sprint').checked;
+  const incRace  = document.getElementById('inc-race').checked;
+
+  el('gen-ics-btn').textContent = 'Laden...';
+  const data = await get('/api/calendar');
+  el('gen-ics-btn').textContent = '📥 Genereer en download .ics';
+
+  if (!data?.length) { alert('Geen kalenderdata'); return; }
+
+  let lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//F1FORLIVE//F1 Dashboard//NL',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    `X-WR-CALNAME:F1FORLIVE ${new Date().getFullYear()}`,
+    'X-WR-TIMEZONE:Europe/Amsterdam',
+  ];
+
+  const SESS_MAP = { FirstPractice:'VT1', SecondPractice:'VT2', ThirdPractice:'VT3', Qualifying:'Kwalificatie', Sprint:'Sprint Race', SprintQualifying:'Sprint Kwalificatie' };
+
+  function icsDate(dateStr, timeStr) {
+    const d = dateStr.replace(/-/g,'');
+    if (!timeStr) return `${d}`;
+    const t = timeStr.replace(/[:Z]/g,'').slice(0,6);
+    return `${d}T${t}Z`;
+  }
+
+  function addEvent(uid, summary, dtstart, dtend, location, desc) {
+    lines.push('BEGIN:VEVENT');
+    lines.push(`UID:${uid}@f1forlive`);
+    lines.push(`SUMMARY:${summary}`);
+    lines.push(`DTSTART:${dtstart}`);
+    lines.push(`DTEND:${dtend}`);
+    if (location) lines.push(`LOCATION:${location}`);
+    if (desc) lines.push(`DESCRIPTION:${desc}`);
+    lines.push(`STATUS:CONFIRMED`);
+    lines.push('END:VEVENT');
+  }
+
+  data.forEach(r => {
+    // Sessions
+    if (r.sessions) {
+      Object.entries(r.sessions).forEach(([k,v]) => {
+        if (!v?.date) return;
+        const skip = (!incFP && k.includes('Practice')) ||
+                     (!incQuali && k === 'Qualifying') ||
+                     (!incSprint && (k === 'Sprint' || k === 'SprintQualifying'));
+        if (skip) return;
+        const sessName = SESS_MAP[k] || k;
+        const dur = k.includes('Practice') ? '010000' : k === 'Qualifying' ? '010000' : '013000';
+        const start = icsDate(v.date, v.time||'120000Z');
+        const dtStart = start.includes('T') ? start : start + 'T120000Z';
+        const dtEnd = dtStart.replace(/T(\d{2})(\d{2})(\d{2})Z/, (m,h,mi,s)=>{
+          const newH = (parseInt(h)+1).toString().padStart(2,'0');
+          return `T${newH}${mi}${s}Z`;
+        });
+        addEvent(`${r.year}-r${r.round}-${k}`, `F1 ${r.name.replace(' Grand Prix','GP')}: ${sessName}`, dtStart, dtEnd, r.circuit, `Ronde ${r.round} — ${r.circuit}, ${r.country}`);
+      });
+    }
+    // Race
+    if (incRace) {
+      const dtStart = icsDate(r.date, r.time||'140000Z');
+      const dtS = dtStart.includes('T') ? dtStart : dtStart + 'T140000Z';
+      const dtE = dtS.replace(/T(\d{2})/, (_,h)=>`T${(parseInt(h)+2).toString().padStart(2,'0')}`);
+      addEvent(`${r.year}-r${r.round}-race`, `🏁 ${r.name}`, dtS, dtE, `${r.circuit}, ${r.country}`, `F1 Grand Prix Ronde ${r.round}/${data.length}`);
+    }
+  });
+
+  lines.push('END:VCALENDAR');
+  const icsContent = lines.join('\r\n');
+
+  // Preview
+  el('ics-preview').textContent = lines.slice(0,30).join('\n') + '\n...';
+  el('ics-preview-wrap').style.display = 'block';
+
+  // Download
+  const blob = new Blob([icsContent], {type:'text/calendar'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `f1-2026.ics`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+buildTimeline();
+</script>
+</body>
+</html>

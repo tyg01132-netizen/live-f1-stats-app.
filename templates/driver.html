@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coureur Profiel</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .driver-photo { width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid var(--red);background:var(--bg3); }
+    .driver-photo-wrap { display:flex;align-items:center;gap:1.5rem;margin-bottom:1rem; }
+  </style>
+</head>
+<body>
+<nav>
+  <a class="nav-logo" href="/"><span class="f1-badge">F1</span> Dashboard</a>
+  <ul class="nav-links">
+    <li><a href="/">Home</a></li><li><a href="/calendar">Kalender</a></li>
+    <li><a href="/drivers">Coureurs</a></li><li><a href="/live">Live</a></li>
+    <li><a href="/about">Over F1</a></li>
+  </ul>
+  <div class="nav-right">
+    <select id="year-dropdown" class="year-select"></select>
+    <div class="live-indicator"><div class="live-dot"></div><span>Live Data</span></div>
+  </div>
+</nav>
+
+<main>
+<div class="driver-hero" id="driver-hero">
+  <div style="max-width:1280px;margin:0 auto;">
+    <div style="font-size:0.72rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--red);margin-bottom:0.8rem;">
+      <a href="/drivers" style="color:inherit;text-decoration:none;">← Coureurs</a>
+    </div>
+    <div class="driver-photo-wrap">
+      <img id="driver-photo" class="driver-photo" src="" alt="" onerror="this.style.display='none'">
+      <div>
+        <div id="driver-name" class="driver-hero-name">Laden...</div>
+        <div id="driver-team" class="driver-hero-team"></div>
+        <div class="driver-stats" id="driver-stats-row"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('season')">📊 Seizoen</button>
+    <button class="tab-btn" onclick="switchTab('chart')">📈 Grafiek</button>
+    <button class="tab-btn" onclick="switchTab('info')">👤 Info</button>
+  </div>
+
+  <div class="tab-panel active" id="tab-season">
+    <div class="card"><div class="card-body" style="padding:0;"><div id="season-results"><div class="loading"><div class="spinner"></div> Laden...</div></div></div></div>
+  </div>
+  <div class="tab-panel" id="tab-chart">
+    <div class="card">
+      <div class="card-header"><span class="card-title">Cumulatieve punten</span></div>
+      <div class="card-body"><div class="chart-wrapper" style="height:300px;position:relative;"><canvas id="driver-chart"></canvas></div></div>
+    </div>
+  </div>
+  <div class="tab-panel" id="tab-info">
+    <div class="card"><div class="card-body" id="driver-info-panel"><div class="loading"><div class="spinner"></div> Laden...</div></div></div>
+  </div>
+</div>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="/static/helpers.js"></script>
+<script src="/static/nav.js"></script>
+<script>
+const CURRENT_YEAR = {{ current_year }}, MIN_YEAR = 2000, MAX_YEAR = {{ current_year }};
+const activeYear = initNav(CURRENT_YEAR, MIN_YEAR, MAX_YEAR);
+const driverId = "{{ driver_id }}";
+let driverColor = '#E10600';
+let driverData = null;
+let chartBuilt = false;
+
+function switchTab(name) {
+  const tabs = ['season','chart','info'];
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', tabs[i]===name));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  if (name === 'chart' && !chartBuilt && driverData) { buildChart(); chartBuilt = true; }
+}
+
+function buildChart() {
+  if (!driverData?.season_results?.length) return;
+  const results = driverData.season_results;
+  let cum = 0;
+  const pts = results.map(r => { cum += parseFloat(r.points || 0); return cum; });
+  const ctx = document.getElementById('driver-chart').getContext('2d');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: results.map(r => `R${r.round}`),
+      datasets: [{ label: 'Punten', data: pts, borderColor: driverColor, backgroundColor: driverColor+'22', tension: 0.3, fill: true, pointBackgroundColor: driverColor, pointRadius: 4 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color:'#888' } } }, scales: { x: { ticks:{color:'#888',font:{size:10}}, grid:{color:'rgba(255,255,255,0.04)'} }, y: { ticks:{color:'#888'}, grid:{color:'rgba(255,255,255,0.04)'} } } }
+  });
+}
+
+// Driver photos via Wikipedia API
+async function fetchDriverPhoto(driverName) {
+  try {
+    const encoded = encodeURIComponent(driverName.replace(' ', '_'));
+    const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encoded}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    return data?.thumbnail?.source || '';
+  } catch { return ''; }
+}
+
+async function loadDriver() {
+  const data = await apiFetch(`/api/driver/${driverId}?year=${activeYear}`);
+  if (!data || !data.name) return;
+  driverData = data;
+
+  const standings = await apiFetch(`/api/standings/drivers?year=${activeYear}`);
+  const found = standings?.find(d => d.driver_id === driverId);
+  if (found) driverColor = teamColor(found.team_id);
+
+  // Photo
+  const photoUrl = await fetchDriverPhoto(data.name);
+  const photoEl = document.getElementById('driver-photo');
+  if (photoUrl) { photoEl.src = photoUrl; photoEl.alt = data.name; }
+  else photoEl.style.display = 'none';
+
+  // Hero
+  document.getElementById('driver-name').textContent = data.name;
+  document.getElementById('driver-team').innerHTML = found ? `<span style="color:${driverColor}">${found.team}</span>` : '';
+  document.getElementById('driver-stats-row').innerHTML = found ? `
+    <div class="driver-stat"><div class="driver-stat-val" style="color:${driverColor}">#${found.number}</div><div class="driver-stat-label">Nummer</div></div>
+    <div class="driver-stat"><div class="driver-stat-val">${found.points}</div><div class="driver-stat-label">Punten ${activeYear}</div></div>
+    <div class="driver-stat"><div class="driver-stat-val">${found.wins}</div><div class="driver-stat-label">Overwinningen</div></div>
+    <div class="driver-stat"><div class="driver-stat-val">P${found.position}</div><div class="driver-stat-label">WK Positie</div></div>` : '';
+
+  // Season table
+  const el = document.getElementById('season-results');
+  if (!data.season_results.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">📊</div><div class="empty-text">Geen seizoensdata beschikbaar voor dit jaar</div></div>';
+  } else {
+    const rows = data.season_results.map(r => {
+      const p = parseInt(r.position);
+      return `<tr>
+        <td style="color:var(--text-muted);font-size:0.8rem">R${r.round}</td>
+        <td><a href="/race/${activeYear}/${r.round}" style="color:inherit;text-decoration:none;font-weight:600">${r.race}</a></td>
+        <td style="color:${p===1?'var(--gold)':p<=3?'var(--silver)':'var(--text)'};font-weight:700">${r.position || r.status}</td>
+        <td style="color:var(--text-muted)">${r.grid}</td>
+        <td style="font-family:monospace;font-size:0.83rem;color:var(--green)">${r.fastest_lap || '—'}</td>
+        <td class="points">${r.points}</td>
+      </tr>`;
+    }).join('');
+    el.innerHTML = `<table class="f1-table"><thead><tr><th>Ronde</th><th>Race</th><th>Finish</th><th>Grid</th><th>Snelste Ronde</th><th>Punten</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+
+  // Info
+  const age = data.dob ? Math.floor((new Date()-new Date(data.dob))/31557600000) : '?';
+  document.getElementById('driver-info-panel').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+      <div>
+        <div class="section-title">Persoonlijk</div>
+        <div style="display:flex;flex-direction:column;gap:0.75rem;">
+          <div><div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:2px">Naam</div><div style="font-weight:600">${data.name}</div></div>
+          <div><div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:2px">Nationaliteit</div><div style="font-weight:600">${flagEmoji(data.nationality)} ${data.nationality}</div></div>
+          <div><div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:2px">Geboortedatum</div><div style="font-weight:600">${data.dob ? formatDate(data.dob) : '—'}</div></div>
+          <div><div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:2px">Leeftijd</div><div style="font-weight:600">${age} jaar</div></div>
+        </div>
+      </div>
+      <div>
+        <div class="section-title">Seizoen ${activeYear}</div>
+        <div style="display:flex;flex-direction:column;gap:0.75rem;">
+          <div><div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:2px">Races</div><div style="font-weight:600">${data.season_results.length}</div></div>
+          <div><div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:2px">Punten</div><div style="font-weight:600;color:${driverColor}">${found?.points || '—'}</div></div>
+          <div><div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:2px">Overwinningen</div><div style="font-weight:600">${found?.wins || '—'}</div></div>
+        </div>
+      </div>
+    </div>
+    ${data.url ? `<div style="margin-top:1.5rem;"><a href="${data.url}" target="_blank" style="color:var(--red);font-size:0.85rem;font-weight:600;text-decoration:none;">Wikipedia →</a></div>` : ''}`;
+}
+
+loadDriver();
+</script>
+</body>
+</html>

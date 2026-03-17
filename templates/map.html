@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Racekaart — F1FORLIVE</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <style>
+    #leaflet-map { width:100%; height:520px; border-radius:var(--r2); z-index:1; }
+    .map-outer { border:1px solid var(--border); border-radius:var(--r2); overflow:hidden; margin-bottom:1.5rem; }
+    .map-legend { display:flex;gap:1.25rem;flex-wrap:wrap;padding:0.55rem 1rem;border-top:1px solid var(--border);font-size:0.7rem;color:var(--txt3);background:#08111f }
+    .ml-dot { width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:middle }
+
+    /* Custom Leaflet popup style */
+    .leaflet-popup-content-wrapper {
+      background: rgba(6,8,14,0.97) !important;
+      border: 1px solid rgba(225,6,0,0.5) !important;
+      border-radius: 8px !important;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.8) !important;
+      color: #f0f0f5 !important;
+    }
+    .leaflet-popup-tip { background: rgba(6,8,14,0.97) !important; }
+    .leaflet-popup-close-button { color: #606070 !important; font-size: 18px !important; }
+    .f1-popup-round { font-family:'Barlow Condensed',sans-serif; font-size:0.6rem; font-weight:900; letter-spacing:2px; color:var(--red); text-transform:uppercase; margin-bottom:3px; }
+    .f1-popup-name { font-family:'Barlow Condensed',sans-serif; font-size:1rem; font-weight:900; margin-bottom:2px; }
+    .f1-popup-circuit { font-size:0.7rem; color:#a0a0b0; margin-bottom:8px; }
+    .f1-popup-btn { display:inline-block; background:rgba(225,6,0,0.85); color:#fff; font-family:'Barlow Condensed',sans-serif; font-size:0.65rem; font-weight:900; letter-spacing:1px; text-transform:uppercase; padding:4px 12px; border-radius:4px; text-decoration:none; }
+    .f1-popup-btn:hover { background:#e10600; }
+    .f1-popup-cancelled { background:rgba(255,140,0,0.15); border:1px solid rgba(255,140,0,0.3); border-radius:4px; padding:4px 8px; font-size:0.68rem; color:#ffaa33; margin-bottom:8px; }
+
+    /* Pulsing marker */
+    .f1-pin-next { animation: pin-pulse 1.5s ease-in-out infinite; }
+    @keyframes pin-pulse { 0%,100%{filter:drop-shadow(0 0 6px #e10600)} 50%{filter:drop-shadow(0 0 14px #ff4422)} }
+
+    .cd-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:0.65rem;margin-top:1.25rem }
+    .cd-card { background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:0.8rem 0.9rem;cursor:pointer;transition:all 0.15s;display:flex;gap:0.65rem;align-items:flex-start }
+    .cd-card:hover { border-color:rgba(225,6,0,0.4);transform:translateY(-2px) }
+    .cd-card.nxt { border-color:rgba(225,6,0,0.55);background:linear-gradient(135deg,rgba(225,6,0,.07),var(--bg2)) }
+    .cd-card.pst { opacity:.5 }
+    .cd-card.cnl { opacity:.45;cursor:default;border-style:dashed;border-color:rgba(255,140,0,0.3) }
+    .cd-rnd  { font-family:var(--font-display);font-size:0.55rem;font-weight:900;letter-spacing:2px;color:var(--txt3);text-transform:uppercase }
+    .cd-name { font-size:0.85rem;font-weight:700;margin:2px 0 1px }
+    .cd-sub  { font-size:0.68rem;color:var(--txt3) }
+  </style>
+</head>
+<body>
+<nav class="topnav">
+  <a class="nav-logo" href="/" style="display:flex;align-items:center;gap:8px">
+    <svg width="26" height="26" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="13" fill="#e10600"/><path d="M7 14h14M14 7v14" stroke="white" stroke-width="2.5" stroke-linecap="round"/><circle cx="14" cy="14" r="3" fill="white"/></svg>
+    <span style="font-family:var(--font-display);font-size:1.25rem;font-weight:900;letter-spacing:-0.5px">F1<span style="color:var(--red)">FOR</span>LIVE</span>
+  </a>
+  <ul class="nav-links" id="nav-links">
+    <li><a href="/">Home</a></li><li><a href="/stats">Stats 2026</a></li>
+    <li><a href="/calendar">Kalender</a></li><li><a href="/live">Live</a></li>
+    <li><a href="/compare">Vergelijk</a></li><li><a href="/map" class="active">Kaart</a></li>
+    <li><a href="/predictor">Prognose</a></li><li><a href="/timeline">Tijdlijn</a></li>
+    <li><a href="/f2">F2</a></li><li><a href="/history">Archief</a></li><li><a href="/info">Info</a></li>
+  </ul>
+  <div class="live-pill"><div class="live-dot"></div><span>Live</span></div>
+  <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+</nav>
+<script>
+(function(){
+  var h=document.getElementById('nav-hamburger'),n=document.getElementById('nav-links');
+  if(h)h.addEventListener('click',function(){h.classList.toggle('open');n.classList.toggle('open');});
+  document.querySelectorAll('.nav-links a').forEach(function(a){a.addEventListener('click',function(){h&&h.classList.remove('open');n&&n.classList.remove('open');});});
+})();
+</script>
+
+<div class="page">
+  <div class="page-title">Wereld Racekaart</div>
+  <div class="page-sub" style="margin-bottom:1.25rem">Alle {{ year }} circuits — klik een pin voor details</div>
+
+  <!-- Cancelled banner -->
+  <div class="cancelled-banner" style="margin-bottom:1.25rem">
+    <div class="cb-icon">⚠️</div>
+    <div>
+      <div class="cb-title">Bahrein & Saudi GP afgelast</div>
+      <div class="cb-text">Beide races zijn gecanceld vanwege het conflict in het Midden-Oosten. Ze staan grijs op de kaart.</div>
+    </div>
+  </div>
+
+  <div class="map-outer">
+    <div id="leaflet-map"></div>
+    <div class="map-legend">
+      <span><span class="ml-dot" style="background:#e10600;box-shadow:0 0 7px rgba(225,6,0,.8)"></span>Volgende race</span>
+      <span><span class="ml-dot" style="background:rgba(225,6,0,0.5)"></span>Aankomend</span>
+      <span><span class="ml-dot" style="background:#444466"></span>Verreden</span>
+      <span><span class="ml-dot" style="background:#ffaa33;opacity:0.6"></span>Afgelast</span>
+    </div>
+  </div>
+
+  <div id="circuit-cards"><div class="loading"><div class="spinner"></div></div></div>
+</div>
+
+<script src="/static/app.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+const YEAR = {{ year }};
+
+// Circuit locations
+const GEO = {
+  bahrain:       {lat:26.032,lng:50.511},  jeddah:        {lat:21.632,lng:39.104},
+  albert_park:   {lat:-37.849,lng:144.968},shanghai:      {lat:31.339,lng:121.220},
+  miami:         {lat:25.958,lng:-80.239}, imola:         {lat:44.344,lng:11.713},
+  monaco:        {lat:43.737,lng:7.427},   villeneuve:    {lat:45.505,lng:-73.522},
+  catalunya:     {lat:41.570,lng:2.261},   red_bull_ring: {lat:47.219,lng:14.764},
+  silverstone:   {lat:52.073,lng:-1.017},  hungaroring:   {lat:47.583,lng:19.251},
+  spa:           {lat:50.437,lng:5.971},   zandvoort:     {lat:52.388,lng:4.540},
+  monza:         {lat:45.620,lng:9.282},   baku:          {lat:40.372,lng:49.853},
+  marina_bay:    {lat:1.291, lng:103.864}, suzuka:        {lat:34.844,lng:136.541},
+  losail:        {lat:25.490,lng:51.454},  americas:      {lat:30.133,lng:-97.641},
+  rodriguez:     {lat:19.404,lng:-99.090}, interlagos:    {lat:-23.701,lng:-46.699},
+  vegas:         {lat:36.113,lng:-115.173},yas_marina:    {lat:24.469,lng:54.603},
+};
+
+// Init Leaflet map with dark CartoDB tiles
+const map = L.map('leaflet-map', {
+  center: [25, 15],
+  zoom: 2,
+  minZoom: 1,
+  maxZoom: 10,
+  zoomControl: true,
+  attributionControl: true,
+});
+
+// Dark tile layer — CartoDB Dark Matter (free, no API key)
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+  subdomains: 'abcd',
+  maxZoom: 19,
+}).addTo(map);
+
+function makeIcon(color, size, glow) {
+  const s = size || 14;
+  const glowCSS = glow ? `filter:drop-shadow(0 0 6px ${color})` : '';
+  return L.divIcon({
+    className: '',
+    html: `<div style="width:${s}px;height:${s}px;border-radius:50%;background:${color};border:2px solid rgba(255,255,255,0.3);${glowCSS};transition:all 0.2s"></div>`,
+    iconSize: [s, s],
+    iconAnchor: [s/2, s/2],
+    popupAnchor: [0, -(s/2+4)],
+  });
+}
+
+function makePulseIcon(color) {
+  return L.divIcon({
+    className: 'f1-pin-next',
+    html: `<div style="position:relative;width:18px;height:18px">
+      <div style="position:absolute;inset:0;border-radius:50%;background:${color};opacity:0.25;animation:pin-pulse 1.5s ease-in-out infinite"></div>
+      <div style="position:absolute;inset:3px;border-radius:50%;background:${color};border:2px solid rgba(255,255,255,0.5)"></div>
+    </div>`,
+    iconSize: [18, 18],
+    iconAnchor: [9, 9],
+    popupAnchor: [0, -13],
+  });
+}
+
+let races = [];
+
+async function init() {
+  const data = await get(`/api/calendar?year=${YEAR}`);
+  races = data || [];
+  let nextFound = false;
+
+  races.forEach(r => {
+    const geo = GEO[r.circuit_id];
+    if (!geo) return;
+
+    const isNext = !r.past && !r.cancelled && !nextFound;
+    if (isNext) nextFound = true;
+
+    let icon;
+    if (r.cancelled)      icon = makeIcon('#ffaa33', 12, false);
+    else if (r.past)      icon = makeIcon('#444466', 11, false);
+    else if (isNext)      icon = makePulseIcon('#e10600');
+    else                  icon = makeIcon('rgba(225,6,0,0.65)', 13, false);
+
+    const statusLine = r.cancelled
+      ? `<div class="f1-popup-cancelled">⚠️ Afgelast — Conflict Midden-Oosten</div>`
+      : r.past
+        ? `<div style="font-size:0.68rem;color:#888;margin-bottom:8px">✓ Race verreden</div>`
+        : isNext
+          ? `<div style="font-size:0.68rem;color:#e10600;font-weight:700;margin-bottom:8px">⟳ Volgende race — ${fmtDate(r.date)}</div>`
+          : `<div style="font-size:0.68rem;color:#a0a0b0;margin-bottom:8px">📅 ${fmtDate(r.date)}</div>`;
+
+    const btnHtml = r.cancelled ? '' :
+      `<a class="f1-popup-btn" href="/race/${r.year}/${r.round}">Details →</a>`;
+
+    const popup = L.popup({ maxWidth: 240, className: '' }).setContent(`
+      <div style="padding:2px 0">
+        <div class="f1-popup-round">Ronde ${r.round} · ${r.year}</div>
+        <div class="f1-popup-name">${r.name.replace(' Grand Prix', ' GP')}</div>
+        <div class="f1-popup-circuit">📍 ${r.circuit}, ${r.country}</div>
+        ${statusLine}
+        ${btnHtml}
+      </div>
+    `);
+
+    const marker = L.marker([geo.lat, geo.lng], { icon }).addTo(map).bindPopup(popup);
+    if (isNext) setTimeout(() => marker.openPopup(), 600);
+  });
+
+  renderCards();
+}
+
+function renderCards() {
+  let nextFound = false;
+  const html = races.map(r => {
+    const geo = GEO[r.circuit_id];
+    const isNext = !r.past && !r.cancelled && !nextFound;
+    if (isNext) nextFound = true;
+    const cls = r.cancelled ? 'cnl' : r.past ? 'pst' : isNext ? 'nxt' : '';
+    const onClick = r.cancelled ? '' : `onclick="flyTo(${geo?.lat||0},${geo?.lng||0},'${r.circuit_id}')"`;
+
+    return `<div class="cd-card ${cls}" ${onClick}>
+      <div style="font-size:1.6rem;flex-shrink:0;line-height:1">${flag(r.country)}</div>
+      <div>
+        <div class="cd-rnd">R${r.round}${r.cancelled?' · ⚠️ AFGELAST':''}</div>
+        <div class="cd-name" style="${r.cancelled?'color:#ffaa33':''}">${r.name.replace(' Grand Prix','')}</div>
+        <div class="cd-sub">📍 ${r.circuit}</div>
+        <div class="cd-sub" style="margin-top:2px">${r.cancelled?'<span style="color:#ffaa33">Afgelast — Conflict MO</span>':fmtDate(r.date)}</div>
+      </div>
+    </div>`;
+  }).join('');
+  el('circuit-cards').innerHTML = `<div class="cd-grid">${html}</div>`;
+}
+
+// Fly to circuit on card click
+function flyTo(lat, lng, circuitId) {
+  map.flyTo([lat, lng], 6, { duration: 1.2 });
+}
+
+init();
+</script>
+</body>
+</html>

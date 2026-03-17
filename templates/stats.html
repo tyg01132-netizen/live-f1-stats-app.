@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stats 2026 — F1FORLIVE</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .stat-chip-big { background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden; }
+    .scb-top { height:3px; }
+    .scb-body { padding:1.1rem 1.25rem; }
+    .scb-lbl { font-family:var(--font-display);font-size:0.58rem;font-weight:900;letter-spacing:2.5px;text-transform:uppercase;color:var(--txt3);margin-bottom:0.3rem; }
+    .scb-val { font-family:var(--font-display);font-size:2.2rem;font-weight:900;line-height:1; }
+    .scb-sub { font-size:0.75rem;color:var(--txt3);margin-top:3px; }
+    .winner-bar-row { display:flex;align-items:center;gap:0.75rem;margin-bottom:5px; }
+    .wbr-name { width:130px;flex-shrink:0;font-size:0.78rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+    .wbr-track { flex:1;height:24px;background:var(--bg4);border-radius:3px;overflow:hidden; }
+    .wbr-fill { height:100%;border-radius:3px;display:flex;align-items:center;padding-left:8px;transition:width 0.6s ease; }
+    .wbr-fill span { font-family:var(--font-mono);font-size:0.7rem;font-weight:700;color:#fff; }
+    .wbr-num { font-family:var(--font-mono);font-size:0.78rem;font-weight:700;color:var(--txt3);width:24px;text-align:right;flex-shrink:0; }
+  </style>
+</head>
+<body>
+<nav class="topnav">
+  <a class="nav-logo" href="/" style="display:flex;align-items:center;gap:8px">
+    <svg width="26" height="26" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="13" fill="#e10600"/><path d="M7 14h14M14 7v14" stroke="white" stroke-width="2.5" stroke-linecap="round"/><circle cx="14" cy="14" r="3" fill="white"/></svg>
+    <span style="font-family:var(--font-display);font-size:1.25rem;font-weight:900;letter-spacing:-0.5px">F1<span style="color:var(--red)">FOR</span>LIVE</span>
+  </a>
+  <ul class="nav-links" id="nav-links">
+    <li><a href="/">Home</a></li>
+    <li><a href="/stats" class="active">Stats 2026</a></li>
+    <li><a href="/calendar">Kalender</a></li>
+    <li><a href="/live">Live</a></li>
+    <li><a href="/compare">Vergelijk</a></li>
+    <li><a href="/map">Kaart</a></li>
+    <li><a href="/predictor">Prognose</a></li>
+    <li><a href="/timeline">Tijdlijn</a></li>
+    <li><a href="/f2">F2</a></li>
+    <li><a href="/history">Archief</a></li>
+    <li><a href="/info">Info</a></li>
+  </ul>
+  <div class="live-pill"><div class="live-dot"></div><span>Live</span></div>
+  <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+</nav>
+<script>
+(function(){
+  var h=document.getElementById('nav-hamburger'),n=document.getElementById('nav-links');
+  if(h)h.addEventListener('click',function(){h.classList.toggle('open');n.classList.toggle('open');});
+  document.querySelectorAll('.nav-links a').forEach(function(a){a.addEventListener('click',function(){h&&h.classList.remove('open');n&&n.classList.remove('open');});});
+})();
+</script>
+
+<div class="page">
+  <div class="stat-hero">
+    <div style="font-family:var(--font-display);font-size:0.62rem;font-weight:900;letter-spacing:3px;text-transform:uppercase;color:var(--red);margin-bottom:0.3rem">Seizoensstatistieken</div>
+    <div class="page-title">Stats {{ year }}</div>
+    <div style="font-size:0.85rem;color:var(--txt3);margin-top:0.25rem">Live data — alle kampioenschapscijfers, overwinnaars, poles en meer</div>
+  </div>
+
+  <div id="chips-row" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:0.75rem;margin-bottom:2rem">
+    <div class="loading"><div class="spinner"></div></div>
+  </div>
+
+  <div class="tab-root">
+    <div class="tabs" id="stats-tabs">
+      <button class="tab-btn active" data-tab="st-standings">Standen</button>
+      <button class="tab-btn" data-tab="st-winners">Overwinnaars</button>
+      <button class="tab-btn" data-tab="st-poles">Poles & Snelste</button>
+      <button class="tab-btn" data-tab="st-races">Races</button>
+    </div>
+
+    <div class="tab-pane active" id="st-standings">
+      <div class="grid-2">
+        <div>
+          <div class="section-label">Coureurskampioenschap</div>
+          <div id="drv-st" class="card"><div class="loading"><div class="spinner"></div></div></div>
+        </div>
+        <div>
+          <div class="section-label">Constructeurskampioenschap</div>
+          <div id="con-st" class="card"><div class="loading"><div class="spinner"></div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-pane" id="st-winners">
+      <div class="grid-2">
+        <div>
+          <div class="section-label">Race overwinnaars</div>
+          <div class="card"><div class="card-body" id="winners-bars"><div class="loading"><div class="spinner"></div></div></div></div>
+        </div>
+        <div>
+          <div class="section-label">Meeste punten per race (gemiddeld)</div>
+          <div class="card"><div class="card-body" id="avg-pts"><div class="loading"><div class="spinner"></div></div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-pane" id="st-poles">
+      <div class="grid-2">
+        <div>
+          <div class="section-label">Pole positions</div>
+          <div class="card"><div class="card-body" id="poles-bars"><div class="loading"><div class="spinner"></div></div></div></div>
+        </div>
+        <div>
+          <div class="section-label">Snelste rondes</div>
+          <div class="card"><div class="card-body" id="fl-bars"><div class="loading"><div class="spinner"></div></div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-pane" id="st-races">
+      <div id="races-table"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+<script>
+const YEAR = {{ year }};
+
+initTabsIn(document.querySelector('.tab-root'));
+
+async function loadAll() {
+  const [stats, ds, cs, cal] = await Promise.all([
+    get('/api/stats/season'),
+    get('/api/standings/drivers'),
+    get('/api/standings/constructors'),
+    get('/api/calendar'),
+  ]);
+
+  // ── Chips ─────────────────────────────────────────────────────────────────
+  const leader = ds?.[0];
+  const gap = ds?.length > 1 ? (ds[0].points - ds[1].points).toFixed(1) : 0;
+  const conLeader = cs?.[0];
+  const past = cal?.filter(r=>r.past).length || 0;
+
+  el('chips-row').innerHTML = [
+    leader ? { lbl:'Leider rijders', val:leader.name.split(' ').pop(), sub:`${leader.points} pts · ${leader.wins} wins`, col:teamColor(leader.team_id) } : null,
+    conLeader ? { lbl:'Leider constructeurs', val:conLeader.name.split(' ').slice(-1)[0], sub:`${conLeader.points} pts`, col:teamColor(conLeader.team_id) } : null,
+    { lbl:'Gap #1 vs #2', val:gap, sub:'punten voorsprong', col:'var(--red)' },
+    { lbl:'Races verreden', val:past, sub:`van ${cal?.length||24} totaal`, col:'var(--green)' },
+    stats?.winners?.length ? { lbl:'Verschillende winnaars', val:stats.winners.length, sub:'coureurs gewonnen', col:'var(--gold)' } : null,
+    leader ? { lbl:'Meeste wins', val:(stats?.winners?.[0]?.count||0), sub:stats?.winners?.[0]?.name||'—', col:'var(--gold)' } : null,
+  ].filter(Boolean).map(c => `
+    <div class="stat-chip-big">
+      <div class="scb-top" style="background:${c.col}"></div>
+      <div class="scb-body">
+        <div class="scb-lbl">${c.lbl}</div>
+        <div class="scb-val" style="color:${c.col}">${c.val}</div>
+        <div class="scb-sub">${c.sub}</div>
+      </div>
+    </div>`).join('');
+
+  // ── Standings tabs ─────────────────────────────────────────────────────────
+  if (ds?.length) {
+    el('drv-st').innerHTML = `<table class="f1-table"><thead><tr><th>Pos</th><th>Coureur</th><th>Team</th><th>Pts</th><th>Wins</th></tr></thead>
+    <tbody>${ds.map(d=>{
+      const p=d.position, col=p==1?'var(--gold)':p==2?'var(--silver)':p==3?'var(--bronze)':'var(--txt3)';
+      return `<tr><td class="pos" style="color:${col}">${p}</td>
+        <td><div class="driver-cell"><div class="team-bar" style="background:${teamColor(d.team_id)}"></div>
+        <div><div class="driver-name">${flagImg(d.nationality,14)} ${d.name}</div></div></div></td>
+        <td style="color:var(--txt3);font-size:0.78rem">${d.team}</td>
+        <td class="pts">${d.points}</td><td style="color:${d.wins>0?'var(--gold)':'var(--txt3)'}">${d.wins}</td></tr>`;
+    }).join('')}</tbody></table>`;
+  } else empty('drv-st','🏎','Geen data');
+
+  if (cs?.length) {
+    const maxP = cs[0].points||1;
+    el('con-st').innerHTML = `<table class="f1-table"><thead><tr><th>Pos</th><th>Team</th><th>Pts</th><th>Wins</th></tr></thead>
+    <tbody>${cs.map(c=>{
+      const p=c.position, col=p==1?'var(--gold)':p==2?'var(--silver)':p==3?'var(--bronze)':'var(--txt3)';
+      const pct=(c.points/maxP*100).toFixed(1);
+      return `<tr><td class="pos" style="color:${col}">${p}</td>
+        <td><div class="driver-cell"><div class="team-bar" style="background:${teamColor(c.team_id)}"></div>
+        <div class="driver-name">${c.name}</div></div></td>
+        <td><div style="height:18px;background:var(--bg4);border-radius:3px;overflow:hidden;width:100%;min-width:80px">
+          <div style="width:${pct}%;height:100%;background:${teamColor(c.team_id)};display:flex;align-items:center;padding-left:6px">
+            <span style="font-family:var(--font-mono);font-size:0.68rem;font-weight:700;color:#fff">${c.points}</span>
+          </div></div></td>
+        <td style="color:${c.wins>0?'var(--gold)':'var(--txt3)'}">${c.wins}</td></tr>`;
+    }).join('')}</tbody></table>`;
+  } else empty('con-st','🏗','Geen data');
+
+  // ── Winners / Poles / FL ──────────────────────────────────────────────────
+  function renderBars(items, wrapId, label) {
+    if (!items?.length) { empty(wrapId,'📊',`Geen ${label} data`); return; }
+    const max = items[0].count||1;
+    el(wrapId).innerHTML = items.map((d,i)=>{
+      const col=teamColor(d.team_id), pct=(d.count/max*100).toFixed(0);
+      const posCol=i==0?'var(--gold)':i==1?'var(--silver)':i==2?'var(--bronze)':'var(--txt3)';
+      return `<div class="winner-bar-row">
+        <div class="wbr-name" style="color:${posCol}" title="${d.name}">${d.name.split(' ').pop()}</div>
+        <div class="wbr-track"><div class="wbr-fill" style="width:${pct}%;background:${col}"><span>${d.count}</span></div></div>
+      </div>`;
+    }).join('');
+  }
+  renderBars(stats?.winners, 'winners-bars', 'overwinnaars');
+  renderBars(stats?.pole_sitters, 'poles-bars', 'poles');
+  renderBars(stats?.fastest_laps, 'fl-bars', 'snelste rondes');
+
+  // Avg points per race
+  if (ds?.length && past > 0) {
+    el('avg-pts').innerHTML = ds.slice(0,10).map((d,i)=>{
+      const avg=(d.points/past).toFixed(1);
+      const col=teamColor(d.team_id);
+      const pct=(parseFloat(avg)/(ds[0].points/past)*100).toFixed(0);
+      return `<div class="winner-bar-row">
+        <div class="wbr-name" title="${d.name}">${d.name.split(' ').pop()}</div>
+        <div class="wbr-track"><div class="wbr-fill" style="width:${pct}%;background:${col}"><span>${avg}</span></div></div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── Races tab ─────────────────────────────────────────────────────────────
+  if (cal?.length) {
+    const pastRaces = cal.filter(r=>r.past);
+    if (!pastRaces.length) { empty('races-table','🏁','Nog geen races verreden'); return; }
+    el('races-table').innerHTML = `<div class="cal-list">` + pastRaces.map(r=>`
+      <a class="cal-row past" href="/race/${r.year}/${r.round}" style="text-decoration:none;color:inherit">
+        <div class="cal-rnd">R<span>${r.round}</span></div>
+        <div class="cal-stripe done"></div>
+        <div class="cal-info">
+          <div class="cal-name">${flagImg(r.country,16)} ${r.name}</div>
+          <div class="cal-meta"><span>${r.circuit}</span><span>${r.country}</span></div>
+        </div>
+        <div class="cal-right">
+          <div class="cal-date">${fmtDate(r.date)}</div>
+          <div class="cal-done">Uitslag →</div>
+        </div>
+      </a>`).join('') + `</div>`;
+  }
+}
+
+loadAll();
+</script>
+</body>
+</html>

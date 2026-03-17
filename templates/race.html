@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Race — F1FORLIVE</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .sprint-badge { display:inline-flex;align-items:center;gap:5px;background:rgba(0,210,90,0.12);border:1px solid rgba(0,210,90,0.3);color:var(--green);font-family:var(--font-display);font-size:0.6rem;font-weight:900;letter-spacing:2px;padding:3px 10px;border-radius:3px;text-transform:uppercase; }
+    .quali-top3 { display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;margin-bottom:1rem; }
+    .qt-card { background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:0.85rem;text-align:center; }
+    .qt-medal { font-size:1.4rem; }
+    .qt-name { font-size:0.88rem;font-weight:700;margin:4px 0 2px; }
+    .qt-team { font-size:0.68rem;color:var(--txt3);margin-bottom:6px; }
+    .qt-time { font-family:var(--font-mono);font-size:0.82rem;color:var(--green); }
+  </style>
+</head>
+<body>
+<nav class="topnav">
+  <a class="nav-logo" href="/" style="display:flex;align-items:center;gap:8px">
+    <svg width="26" height="26" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="13" fill="#e10600"/><path d="M7 14h14M14 7v14" stroke="white" stroke-width="2.5" stroke-linecap="round"/><circle cx="14" cy="14" r="3" fill="white"/></svg>
+    <span style="font-family:var(--font-display);font-size:1.25rem;font-weight:900;letter-spacing:-0.5px">F1<span style="color:var(--red)">FOR</span>LIVE</span>
+  </a>
+  <ul class="nav-links" id="nav-links">
+    <li><a href="/">Home</a></li><li><a href="/stats">Stats 2026</a></li>
+    <li><a href="/calendar">Kalender</a></li><li><a href="/live">Live</a></li>
+    <li><a href="/compare">Vergelijk</a></li><li><a href="/map">Kaart</a></li>
+    <li><a href="/predictor">Prognose</a></li><li><a href="/timeline">Tijdlijn</a></li>
+    <li><a href="/f2">F2</a></li><li><a href="/history">Archief</a></li>
+    <li><a href="/info">Info</a></li>
+  </ul>
+  <div class="live-pill"><div class="live-dot"></div><span>Live</span></div>
+  <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+</nav>
+<script>
+(function(){
+  var h=document.getElementById('nav-hamburger'),n=document.getElementById('nav-links');
+  if(h)h.addEventListener('click',function(){h.classList.toggle('open');n.classList.toggle('open');});
+  document.querySelectorAll('.nav-links a').forEach(function(a){a.addEventListener('click',function(){h&&h.classList.remove('open');n&&n.classList.remove('open');});});
+})();
+</script>
+
+<div class="page">
+  <div id="race-header"><div class="loading"><div class="spinner"></div></div></div>
+
+  <div class="tab-root" style="margin-top:1.5rem">
+    <div class="tabs" id="race-tabs">
+      <button class="tab-btn active" data-tab="t-results">🏁 Race Uitslag</button>
+      <button class="tab-btn" data-tab="t-qualifying">⏱ Kwalificatie</button>
+      <button class="tab-btn" data-tab="t-sprint"       id="btn-sprint" style="display:none">⚡ Sprint Race</button>
+      <button class="tab-btn" data-tab="t-sprint-quali" id="btn-sq"     style="display:none">⚡ Sprint Kwal.</button>
+      <button class="tab-btn" data-tab="t-pitstops">🔧 Pitstops</button>
+      <button class="tab-btn" data-tab="t-incidents">🚗 Incidenten</button>
+      <button class="tab-btn" data-tab="t-sectors">📊 Sectortijden</button>
+      <button class="tab-btn" data-tab="t-speedtrap">💨 Snelheden</button>
+      <button class="tab-btn" data-tab="t-replay">🎬 Replay</button>
+      <button class="tab-btn" data-tab="t-weather">🌤 Weer</button>
+    </div>
+
+    <div class="tab-pane active" id="t-results">
+      <div class="card"><div id="results-body"><div class="loading"><div class="spinner"></div></div></div></div>
+    </div>
+    <div class="tab-pane" id="t-qualifying">
+      <div id="quali-body"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
+    <div class="tab-pane" id="t-sprint">
+      <div id="sprint-body"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
+    <div class="tab-pane" id="t-sprint-quali">
+      <div id="sprint-quali-body"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
+    <div class="tab-pane" id="t-pitstops">
+      <div class="card"><div id="pits-body"><div class="loading"><div class="spinner"></div></div></div></div>
+    </div>
+    <div class="tab-pane" id="t-incidents">
+      <div class="card"><div id="incidents-body"><div class="loading"><div class="spinner"></div></div></div></div>
+    </div>
+    <div class="tab-pane" id="t-sectors">
+      <div class="card"><div id="sectors-body"><div class="loading"><div class="spinner"></div></div></div></div>
+    </div>
+    <div class="tab-pane" id="t-speedtrap">
+      <div class="card"><div id="speedtrap-body"><div class="loading"><div class="spinner"></div></div></div></div>
+    </div>
+    <div class="tab-pane" id="t-replay">
+      <div class="card"><div class="card-body" id="replay-body"><div class="loading"><div class="spinner"></div></div></div></div>
+    </div>
+    <div class="tab-pane" id="t-weather">
+      <div id="weather-body"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
+    </div>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+<script>
+const YEAR = {{ year }}, ROUND = {{ round_num }};
+let raceTeams = {};
+
+initTabsIn(document.querySelector('.tab-root'));
+
+// ── Shared: race results table ───────────────────────────────────────────────
+function resultsTable(results, showFastest=false) {
+  if (!results?.length) return '<div class="empty"><div class="icon">🏁</div>Nog geen uitslag beschikbaar</div>';
+  return `<table class="f1-table">
+    <thead><tr>
+      <th>Pos</th><th>Coureur</th><th>Team</th><th>Grid</th><th>Ronden</th>
+      <th>Tijd / Status</th>${showFastest ? '<th>Snelste</th>' : ''}<th>Pts</th>
+    </tr></thead>
+    <tbody>${results.map(r => {
+      const p = parseInt(r.position);
+      const pc = p===1?'var(--gold)':p===2?'var(--silver)':p===3?'var(--bronze)':'inherit';
+      const isFl = String(r.fastest_rank)==='1';
+      raceTeams[r.driver_id] = r.team_id;
+      return `<tr>
+        <td class="pos" style="color:${pc}">${isNaN(p) ? r.position : p}</td>
+        <td><div class="driver-cell">
+          <div class="team-bar" style="background:${teamColor(r.team_id)}"></div>
+          <div>
+            <div class="driver-name">${r.name}</div>
+            <div style="font-family:var(--font-mono);font-size:0.7rem;color:var(--txt3)">#${r.number||'?'} ${r.code||''}</div>
+          </div>
+        </div></td>
+        <td style="color:var(--txt3);font-size:0.78rem">${r.team}</td>
+        <td style="font-family:var(--font-mono);font-size:0.78rem;color:var(--txt3)">${r.grid||'—'}</td>
+        <td style="font-family:var(--font-mono);font-size:0.78rem;color:var(--txt3)">${r.laps||'—'}</td>
+        <td style="font-family:var(--font-mono);font-size:0.8rem">${r.time||r.status||'—'}</td>
+        ${showFastest ? `<td style="font-family:var(--font-mono);font-size:0.78rem;color:${isFl?'var(--green)':'var(--txt3)'}">${r.fastest_lap||'—'}${isFl?' 🟣':''}</td>` : ''}
+        <td class="pts">${r.points}</td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table>`;
+}
+
+// ── Shared: qualifying table ─────────────────────────────────────────────────
+function qualiTable(results) {
+  if (!results?.length) return '<div class="empty"><div class="icon">⏱</div>Geen data beschikbaar</div>';
+  const top3 = results.slice(0,3);
+  const medals = ['🥇','🥈','🥉'];
+  const borderCols = ['var(--gold)','var(--silver)','var(--bronze)'];
+  const top3html = `<div class="quali-top3">${top3.map((r,i) => {
+    const best = r.q3 || r.q2 || r.q1 || '—';
+    return `<div class="qt-card" style="border-top:2px solid ${borderCols[i]}">
+      <div class="qt-medal">${medals[i]}</div>
+      <div class="qt-name" style="color:${teamColor(r.team_id)}">${r.name.split(' ').pop()}</div>
+      <div class="qt-team">${r.team}</div>
+      <div class="qt-time">${best}</div>
+    </div>`;
+  }).join('')}</div>`;
+
+  return top3html + `<table class="f1-table">
+    <thead><tr><th>Pos</th><th>Coureur</th><th>Team</th><th>Q1</th><th>Q2</th><th>Q3</th></tr></thead>
+    <tbody>${results.map(r => `<tr>
+      <td class="pos">${r.position}</td>
+      <td><div class="driver-cell">
+        <div class="team-bar" style="background:${teamColor(r.team_id)}"></div>
+        <div><div class="driver-name">${r.name}</div></div>
+      </div></td>
+      <td style="color:var(--txt3);font-size:0.78rem">${r.team}</td>
+      <td style="font-family:var(--font-mono);font-size:0.8rem;color:${r.q1?'var(--txt)':'var(--txt3)'}">${r.q1||'—'}</td>
+      <td style="font-family:var(--font-mono);font-size:0.8rem;color:${r.q2?'var(--txt)':'var(--txt3)'}">${r.q2||'—'}</td>
+      <td style="font-family:var(--font-mono);font-size:0.8rem;color:${r.q3?'var(--green)':'var(--txt3)'}">${r.q3||'—'}</td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+}
+
+// ── Race results ─────────────────────────────────────────────────────────────
+async function loadResults() {
+  const data = await get(`/api/results/${YEAR}/${ROUND}`);
+  const header = el('race-header'), body = el('results-body');
+  if (!data?.race) {
+    // Future race — show countdown
+    const cal = await get(`/api/calendar?year=${YEAR}`);
+    const race = (cal||[]).find(r => parseInt(r.round) === ROUND);
+    if (race && !race.past) {
+      header.innerHTML = `<div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+        <div>
+          <div style="font-size:0.7rem;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--txt3);margin-bottom:0.3rem">${flagImg(race.country,16)} Ronde ${ROUND} · ${YEAR}</div>
+          <div class="page-title">${race.name}</div>
+          <div style="font-size:0.82rem;color:var(--txt3);margin-top:0.25rem">📍 ${race.circuit}, ${race.locality||''} · ${fmtDate(race.date)}</div>
+        </div>
+        <div id="cphoto" style="width:200px;height:110px;border-radius:8px;overflow:hidden;background:var(--bg3);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:2.5rem">${flag(race.country)}</div>
+      </div>`;
+      if (race.circuit_id) get('/api/photo/'+race.circuit_id).then(p=>{if(p?.url){const w=el('cphoto');if(w)w.outerHTML='<img src="'+p.url+'" style="width:200px;height:110px;border-radius:8px;object-fit:cover;flex-shrink:0" alt="">';}});
+      const raceDate = new Date(race.iso || (race.date+'T'+(race.time||'14:00:00')+'Z'));
+      const diff = raceDate - Date.now();
+      const d=Math.floor(diff/86400000), h=Math.floor(diff%86400000/3600000), m=Math.floor(diff%3600000/60000);
+      body.innerHTML = `<div style="text-align:center;padding:3rem 1rem">
+        <div style="font-size:3rem;margin-bottom:1rem">⏳</div>
+        <div style="font-family:var(--font-display);font-size:1.5rem;font-weight:900;margin-bottom:0.5rem">Nog niet verreden</div>
+        <div style="font-size:0.88rem;color:var(--txt3);margin-bottom:1.5rem">Uitslagen verschijnen na afloop van de race.</div>
+        ${diff>0?`<div style="display:inline-flex;gap:1.25rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:1rem 1.5rem;margin-bottom:1.5rem">
+          <div style="text-align:center"><div style="font-family:var(--font-display);font-size:2rem;font-weight:900;color:var(--red)">${d}</div><div style="font-size:0.6rem;font-weight:800;letter-spacing:2px;color:var(--txt3)">DAGEN</div></div>
+          <div style="font-family:var(--font-display);font-size:1.8rem;color:rgba(225,6,0,0.3);align-self:flex-start;margin-top:4px">:</div>
+          <div style="text-align:center"><div style="font-family:var(--font-display);font-size:2rem;font-weight:900;color:var(--red)">${h}</div><div style="font-size:0.6rem;font-weight:800;letter-spacing:2px;color:var(--txt3)">UREN</div></div>
+          <div style="font-family:var(--font-display);font-size:1.8rem;color:rgba(225,6,0,0.3);align-self:flex-start;margin-top:4px">:</div>
+          <div style="text-align:center"><div style="font-family:var(--font-display);font-size:2rem;font-weight:900;color:var(--red)">${m}</div><div style="font-size:0.6rem;font-weight:800;letter-spacing:2px;color:var(--txt3)">MIN</div></div>
+        </div>`:''}
+        <a href="/calendar" style="display:inline-block;background:var(--red);color:#fff;font-family:var(--font-display);font-size:0.75rem;font-weight:900;letter-spacing:2px;padding:0.6rem 1.25rem;border-radius:4px;text-decoration:none">← Terug naar kalender</a>
+      </div>`;
+      document.querySelectorAll('.tab-btn:not([data-tab="t-results"])').forEach(b=>b.style.display='none');
+    } else {
+      header.innerHTML = '<div class="empty"><div class="icon">❌</div>Race niet gevonden</div>';
+      body.innerHTML = '';
+    }
+    return;
+  }
+  const r = data.race;
+  header.innerHTML = `
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+      <div>
+        <div style="font-size:0.7rem;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:var(--txt3);margin-bottom:0.3rem">
+          ${flagImg(r.country,16)} Ronde ${ROUND} · ${YEAR}
+        </div>
+        <div class="page-title">${r.name}</div>
+        <div style="font-size:0.82rem;color:var(--txt3);margin-top:0.25rem">📍 ${r.circuit}, ${r.locality||''} · ${fmtDate(r.date)}</div>
+      </div>
+      <div id="cphoto" style="width:200px;height:110px;border-radius:8px;overflow:hidden;background:var(--bg3);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:2.5rem">${flag(r.country)}</div>
+    </div>`;
+  if (r.circuit_id) get(`/api/photo/${r.circuit_id}`).then(p => {
+    if (p?.url) { const w=el('cphoto'); if(w) w.outerHTML=`<img src="${p.url}" style="width:200px;height:110px;border-radius:8px;object-fit:cover;flex-shrink:0" alt="">`; }
+  });
+  body.innerHTML = resultsTable(data.results, true);
+
+  // Silently check for sprint weekend
+  checkSprintWeekend();
+}
+
+// ── Sprint weekend detection ─────────────────────────────────────────────────
+async function checkSprintWeekend() {
+  const data = await get(`/api/sprint/${YEAR}/${ROUND}`);
+  if (!data?.results?.length) return;
+
+  // Show sprint tabs
+  el('btn-sprint').style.display = '';
+  el('btn-sq').style.display = '';
+
+  // Pre-populate sprint results
+  el('sprint-body').innerHTML = `<div class="card">
+    <div style="padding:0.85rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:0.75rem">
+      <span class="sprint-badge">⚡ Sprint Race</span>
+      <span style="font-size:0.8rem;color:var(--txt3)">${data.name||''} · ${fmtDate(data.date||'')}</span>
+    </div>
+    <div>${resultsTable(data.results, false)}</div>
+  </div>`;
+}
+
+// ── Qualifying ───────────────────────────────────────────────────────────────
+async function loadQualifying() {
+  const data = await get(`/api/qualifying/${YEAR}/${ROUND}`);
+  el('quali-body').innerHTML = `<div class="card"><div class="card-body">${qualiTable(data)}</div></div>`;
+}
+
+// ── Sprint qualifying ────────────────────────────────────────────────────────
+async function loadSprintQuali() {
+  const data = await get(`/api/sprint-qualifying/${YEAR}/${ROUND}`);
+  const body = el('sprint-quali-body');
+  if (!data?.results?.length) {
+    body.innerHTML = `<div class="card"><div class="card-body">
+      <div class="empty"><div class="icon">⚡</div>Geen sprint kwalificatie data beschikbaar</div>
+    </div></div>`; return;
+  }
+  body.innerHTML = `<div class="card">
+    <div style="padding:0.85rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:0.75rem">
+      <span class="sprint-badge">⚡ Sprint Kwalificatie</span>
+      <span style="font-size:0.8rem;color:var(--txt3)">${data.name||''}</span>
+    </div>
+    <div class="card-body">${qualiTable(data.results)}</div>
+  </div>`;
+}
+
+// ── Pitstops ─────────────────────────────────────────────────────────────────
+async function loadPitstops() {
+  const data = await get(`/api/pitstops/${YEAR}/${ROUND}`);
+  const body = el('pits-body');
+  if (!data?.length) { body.innerHTML='<div class="empty"><div class="icon">🔧</div>Geen pitstop data</div>'; return; }
+  const sorted = [...data].sort((a,b) => parseInt(a.lap)-parseInt(b.lap));
+  const times = sorted.map(p=>parseFloat(p.duration)).filter(t=>t>0&&t<60);
+  const minT = times.length ? Math.min(...times) : 0;
+  body.innerHTML = `<table class="f1-table">
+    <thead><tr><th>Ronde</th><th>Coureur</th><th>Stop #</th><th>Duur</th><th>Tijd</th></tr></thead>
+    <tbody>${sorted.map(p => {
+      const dur = parseFloat(p.duration);
+      const best = dur > 0 && dur < 60 && Math.abs(dur - minT) < 0.001;
+      return `<tr>
+        <td style="font-family:var(--font-mono);color:var(--txt3)">${p.lap}</td>
+        <td><div class="driver-cell">
+          <div class="team-bar" style="background:${teamColor(raceTeams[p.driverId]||'')}"></div>
+          <div class="driver-name">${p.driverId}</div>
+        </div></td>
+        <td style="color:var(--txt3)">${p.stop}</td>
+        <td style="font-family:var(--font-mono);font-weight:700;color:${best?'var(--green)':'inherit'}">${p.duration}${best?' ⚡':''}</td>
+        <td style="font-family:var(--font-mono);font-size:0.78rem;color:var(--txt3)">${p.time}</td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table>`;
+}
+
+// ── Race incidents ───────────────────────────────────────────────────────────
+async function loadIncidents() {
+  const data = await get(`/api/race-incidents/${YEAR}/${ROUND}`);
+  const body = el('incidents-body');
+  if (!data?.length) {
+    body.innerHTML = `<div style="padding:1.5rem"><div class="empty"><div class="icon">🚗</div>Geen incidentdata beschikbaar voor deze race<br><span style="font-size:0.72rem;color:var(--txt3)">OpenF1 levert alleen data voor recente races</span></div></div>`; return;
+  }
+  body.innerHTML = `<div style="padding:0">
+    <div style="padding:0.85rem 1.25rem;border-bottom:1px solid var(--border);font-family:var(--font-display);font-size:0.62rem;font-weight:900;letter-spacing:2px;color:var(--txt3);text-transform:uppercase">${data.length} race-controle berichten</div>
+    <div style="max-height:600px;overflow-y:auto">
+    ${data.map(m=>{
+      const lapStr = m.lap ? `<span style="font-family:var(--font-mono);font-size:0.68rem;color:var(--txt3);background:var(--bg4);padding:1px 6px;border-radius:3px">Ronde ${m.lap}</span>` : '';
+      const ts = m.time ? new Date(m.time).toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) : '';
+      const isImportant = ['🔴','🚗','🟡','🏁'].includes(m.icon);
+      return `<div style="display:flex;gap:0.75rem;align-items:flex-start;padding:0.65rem 1.25rem;border-bottom:1px solid rgba(255,255,255,0.03);${isImportant?'background:rgba(225,6,0,0.03)':''}">
+        <span style="font-size:1.2rem;flex-shrink:0;margin-top:1px">${m.icon}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:0.82rem;font-weight:${isImportant?'700':'400'};line-height:1.4">${m.message}</div>
+          <div style="display:flex;gap:0.5rem;align-items:center;margin-top:3px">${lapStr}<span style="font-size:0.65rem;color:var(--txt3)">${ts}</span></div>
+        </div>
+      </div>`;
+    }).join('')}
+    </div>
+  </div>`;
+}
+
+// ── Sector times ──────────────────────────────────────────────────────────────
+async function loadSectors() {
+  const data = await get(`/api/sector-times/${YEAR}/${ROUND}`);
+  const body = el('sectors-body');
+  if (!data?.length) { body.innerHTML='<div style="padding:1.5rem"><div class="empty"><div class="icon">📊</div>Geen sectortijden beschikbaar</div></div>'; return; }
+  const bestS1 = Math.min(...data.filter(d=>d.s1).map(d=>d.s1));
+  const bestS2 = Math.min(...data.filter(d=>d.s2).map(d=>d.s2));
+  const bestS3 = Math.min(...data.filter(d=>d.s3).map(d=>d.s3));
+  const fmt = v => v ? v.toFixed(3) : '—';
+  body.innerHTML = `
+    <div style="padding:0.85rem 1.25rem;border-bottom:1px solid var(--border)">
+      <div class="sector-row" style="padding:0">
+        <div></div>
+        <div style="font-family:var(--font-display);font-size:0.62rem;font-weight:900;letter-spacing:2px;color:var(--txt3);text-transform:uppercase">Coureur</div>
+        <div style="font-family:var(--font-display);font-size:0.62rem;font-weight:900;letter-spacing:2px;color:var(--txt3);text-align:right">Sector 1</div>
+        <div style="font-family:var(--font-display);font-size:0.62rem;font-weight:900;letter-spacing:2px;color:var(--txt3);text-align:right">Sector 2</div>
+        <div style="font-family:var(--font-display);font-size:0.62rem;font-weight:900;letter-spacing:2px;color:var(--txt3);text-align:right">Sector 3</div>
+        <div style="font-family:var(--font-display);font-size:0.62rem;font-weight:900;letter-spacing:2px;color:var(--txt3);text-align:right">Totaal</div>
+      </div>
+    </div>
+    ${data.map((d,i)=>{
+      const isS1 = d.s1 && d.s1 === bestS1, isS2 = d.s2 && d.s2 === bestS2, isS3 = d.s3 && d.s3 === bestS3;
+      const posCol = i===0?'var(--gold)':i===1?'var(--silver)':i===2?'var(--bronze)':'var(--txt3)';
+      return `<div class="sector-row ${isS1?'best-s1':''} ${isS2?'best-s2':''} ${isS3?'best-s3':''}">
+        <div class="sector-pos" style="color:${posCol}">${i+1}</div>
+        <div style="display:flex;align-items:center;gap:0.5rem">
+          <div style="width:3px;height:24px;border-radius:2px;background:${d.team_colour};flex-shrink:0"></div>
+          <div>
+            <div style="font-size:0.82rem;font-weight:700">${d.code}</div>
+            <div style="font-size:0.65rem;color:var(--txt3)">${(d.name||'').split(' ').pop()}</div>
+          </div>
+        </div>
+        <div class="sector-val s1-val" style="color:${isS1?'var(--red)':'inherit'}">${fmt(d.s1)}${isS1?' 🟣':''}</div>
+        <div class="sector-val s2-val" style="color:${isS2?'var(--red)':'inherit'}">${fmt(d.s2)}${isS2?' 🟣':''}</div>
+        <div class="sector-val s3-val" style="color:${isS3?'var(--red)':'inherit'}">${fmt(d.s3)}${isS3?' 🟣':''}</div>
+        <div class="sector-val" style="font-weight:700">${fmt(d.total)}</div>
+      </div>`;
+    }).join('')}`;
+}
+
+// ── Speed trap ────────────────────────────────────────────────────────────────
+async function loadSpeedTrap() {
+  const data = await get(`/api/speed-trap/${YEAR}/${ROUND}`);
+  const body = el('speedtrap-body');
+  if (!data?.length) { body.innerHTML='<div style="padding:1.5rem"><div class="empty"><div class="icon">💨</div>Geen snelheidsdata beschikbaar</div></div>'; return; }
+  const maxSpd = data[0]?.speed || 1;
+  body.innerHTML = `
+    <div style="padding:0.85rem 1.25rem;border-bottom:1px solid var(--border);font-family:var(--font-display);font-size:0.62rem;font-weight:900;letter-spacing:2px;color:var(--txt3);text-transform:uppercase">Topsnelheden — Snelheidsval</div>
+    <div style="padding:1.25rem;display:flex;flex-direction:column;gap:0.6rem">
+    ${data.map((d,i)=>{
+      const pct = (d.speed / maxSpd * 100).toFixed(1);
+      const posCol = i===0?'var(--gold)':i===1?'var(--silver)':i===2?'var(--bronze)':'var(--txt3)';
+      return `<div style="display:flex;align-items:center;gap:0.75rem">
+        <div style="font-family:var(--font-mono);font-size:0.72rem;color:${posCol};width:18px;text-align:center">${i+1}</div>
+        <div style="width:90px;flex-shrink:0;font-size:0.78rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${d.code}</div>
+        <div style="flex:1;height:24px;background:var(--bg4);border-radius:3px;overflow:hidden">
+          <div style="width:${pct}%;height:100%;background:${d.team_colour};display:flex;align-items:center;padding:0 8px;transition:width 0.6s ease">
+            <span style="font-family:var(--font-mono);font-size:0.7rem;font-weight:700;color:#fff;white-space:nowrap">${d.speed} km/h</span>
+          </div>
+        </div>
+        <div style="font-size:0.68rem;color:var(--txt3);width:50px;text-align:right">R${d.lap||'?'}</div>
+      </div>`;
+    }).join('')}
+    </div>`;
+}
+
+// ── Race replay (positions per lap chart) ────────────────────────────────────
+async function loadReplay() {
+  const data = await get(`/api/race-positions/${YEAR}/${ROUND}`);
+  const body = el('replay-body');
+  if (!data?.drivers?.length) { body.innerHTML='<div class="empty"><div class="icon">🎬</div>Geen replaydata beschikbaar<br><span style="font-size:0.72rem;color:var(--txt3)">OpenF1 levert alleen data voor recente races</span></div>'; return; }
+
+  const drivers = data.drivers.filter(d => d.positions.some(p=>p));
+  const maxLap = data.max_lap;
+  let currentLap = 0; let playing = false; let raf = null; let speed = 1;
+
+  body.innerHTML = `
+    <div style="margin-bottom:0.75rem;font-size:0.82rem;color:var(--txt3)">Posities per ronde — animeer de race opnieuw</div>
+    <canvas id="replay-canvas" style="width:100%;height:360px;border-radius:var(--r);background:var(--bg3)"></canvas>
+    <div class="replay-controls" style="margin-top:0.75rem">
+      <button class="rc-play-btn" id="replay-play">▶ PLAY</button>
+      <input type="range" class="rc-slider" id="replay-slider" min="0" max="${maxLap}" value="0" step="1">
+      <div class="rc-lap-display" id="replay-lap">Ronde 0/${maxLap}</div>
+      <select id="replay-speed" style="background:var(--bg3);border:1px solid var(--border);color:var(--txt);border-radius:5px;padding:5px 8px;font-size:0.72rem;font-family:var(--font-mono)">
+        <option value="1">1×</option><option value="3">3×</option><option value="8">8×</option>
+      </select>
+    </div>
+    <div style="margin-top:1rem;display:flex;flex-wrap:wrap;gap:0.4rem" id="replay-legend"></div>`;
+
+  // Legend
+  document.getElementById('replay-legend').innerHTML = drivers.slice(0,20).map(d=>
+    `<div style="display:flex;align-items:center;gap:4px;font-size:0.65rem">
+      <div style="width:12px;height:3px;border-radius:1px;background:${d.colour}"></div>
+      <span style="color:var(--txt2)">${d.code}</span>
+    </div>`
+  ).join('');
+
+  const canvas = document.getElementById('replay-canvas');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+
+  function resize() {
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr; canvas.height = rect.height * dpr;
+    ctx.scale(dpr, dpr);
+  }
+  resize(); new ResizeObserver(resize).observe(canvas);
+
+  function drawFrame(lap) {
+    const rect = canvas.getBoundingClientRect();
+    const W = rect.width, H = rect.height;
+    ctx.clearRect(0,0,W,H);
+    const PAD = {t:20,r:40,b:30,l:50};
+    const cW = W-PAD.l-PAD.r, cH = H-PAD.t-PAD.b;
+    const numDrivers = drivers.length;
+
+    // Grid lines
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)'; ctx.lineWidth = 1;
+    for (let pos=1; pos<=numDrivers; pos++) {
+      const y = PAD.t + (pos-1)/(numDrivers-1||1)*cH;
+      ctx.beginPath(); ctx.moveTo(PAD.l,y); ctx.lineTo(PAD.l+cW,y); ctx.stroke();
+      ctx.fillStyle='rgba(255,255,255,0.25)'; ctx.font=`${10*dpr/dpr}px JetBrains Mono,monospace`;
+      ctx.textAlign='right'; ctx.fillText(pos, PAD.l-6, y+4);
+    }
+    // Lap axis
+    ctx.strokeStyle='rgba(255,255,255,0.08)'; ctx.lineWidth=1;
+    for (let l=0; l<=maxLap; l+=Math.max(1,Math.floor(maxLap/10))) {
+      const x = PAD.l + l/maxLap*cW;
+      ctx.beginPath(); ctx.moveTo(x,PAD.t); ctx.lineTo(x,PAD.t+cH); ctx.stroke();
+      if (l>0) { ctx.fillStyle='rgba(255,255,255,0.25)'; ctx.textAlign='center'; ctx.fillText(l, x, PAD.t+cH+16); }
+    }
+
+    // Draw each driver's position history
+    drivers.forEach(d => {
+      const pts = [];
+      for (let l=0; l<=Math.min(lap,d.positions.length-1); l++) {
+        const pos = d.positions[l];
+        if (pos == null || pos === '') continue;
+        const x = PAD.l + l/maxLap*cW;
+        const y = PAD.t + (parseInt(pos)-1)/(numDrivers-1||1)*cH;
+        pts.push({x,y,pos});
+      }
+      if (pts.length < 2) return;
+      ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
+      pts.forEach(p => ctx.lineTo(p.x, p.y));
+      ctx.strokeStyle = d.colour; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.7; ctx.stroke();
+      // Current position dot
+      const last = pts[pts.length-1];
+      ctx.beginPath(); ctx.arc(last.x, last.y, 4, 0, Math.PI*2);
+      ctx.fillStyle = d.colour; ctx.globalAlpha = 1; ctx.fill();
+      // Code label
+      ctx.fillStyle = d.colour; ctx.font = `bold ${9*dpr/dpr}px Barlow Condensed,sans-serif`;
+      ctx.textAlign = 'left'; ctx.globalAlpha = 0.9;
+      ctx.fillText(d.code, last.x+7, last.y+4);
+      ctx.globalAlpha = 1;
+    });
+
+    // Current lap line
+    if (lap > 0) {
+      const x = PAD.l + lap/maxLap*cW;
+      ctx.strokeStyle = 'rgba(225,6,0,0.6)'; ctx.lineWidth = 1; ctx.setLineDash([4,4]);
+      ctx.beginPath(); ctx.moveTo(x,PAD.t); ctx.lineTo(x,PAD.t+cH); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  }
+
+  function setLap(l) {
+    currentLap = Math.max(0, Math.min(maxLap, l));
+    document.getElementById('replay-slider').value = currentLap;
+    document.getElementById('replay-lap').textContent = `Ronde ${currentLap}/${maxLap}`;
+    drawFrame(currentLap);
+  }
+
+  let lastTs = null;
+  function animate(ts) {
+    if (!lastTs) lastTs = ts;
+    const elapsed = ts - lastTs;
+    const lapTime = 1000 / speed;
+    if (elapsed >= lapTime) {
+      lastTs = ts;
+      if (currentLap >= maxLap) { playing = false; document.getElementById('replay-play').textContent = '↺ OPNIEUW'; return; }
+      setLap(currentLap + 1);
+    }
+    if (playing) raf = requestAnimationFrame(animate);
+  }
+
+  document.getElementById('replay-play').onclick = () => {
+    if (currentLap >= maxLap) setLap(0);
+    playing = !playing; lastTs = null;
+    document.getElementById('replay-play').textContent = playing ? '⏸ PAUZE' : '▶ PLAY';
+    if (playing) raf = requestAnimationFrame(animate);
+    else if (raf) cancelAnimationFrame(raf);
+  };
+  document.getElementById('replay-slider').oninput = e => { if (playing){playing=false;cancelAnimationFrame(raf);document.getElementById('replay-play').textContent='▶ PLAY';} setLap(parseInt(e.target.value)); };
+  document.getElementById('replay-speed').onchange = e => { speed = parseInt(e.target.value); };
+
+  setLap(0);
+}
+
+// ── Weather ───────────────────────────────────────────────────────────────────
+async function loadWeather() {
+  const raceInfo = await get(`/api/results/${YEAR}/${ROUND}`);
+  const circuitId = raceInfo?.race?.circuit_id;
+  const body = el('weather-body');
+  if (!circuitId) { body.innerHTML='<div style="padding:1.5rem"><div class="empty"><div class="icon">🌤</div>Circuit onbekend</div></div>'; return; }
+  const w = await get(`/api/weather/${circuitId}`);
+  if (!w || w.error) { body.innerHTML=`<div style="padding:1.5rem"><div class="empty"><div class="icon">🌤</div>${w?.error||'Weerdata niet beschikbaar'}</div></div>`; return; }
+  const icon = window.weatherIcon ? window.weatherIcon(w.weather_code) : '🌡️';
+  body.innerHTML = `<div class="weather-widget">
+    <div style="font-family:var(--font-display);font-size:0.62rem;font-weight:900;letter-spacing:3px;text-transform:uppercase;color:var(--txt3);margin-bottom:1rem">Huidig weer — ${w.city}</div>
+    <div class="ww-top">
+      <div class="ww-icon">${icon}</div>
+      <div>
+        <div class="ww-temp">${w.temp_c}°C</div>
+        <div class="ww-desc">${w.desc} · Voelt als ${w.feels_like}°C</div>
+      </div>
+    </div>
+    <div class="ww-stats">
+      <div class="ww-stat">💨 Wind <strong>${w.wind_kmph} km/h</strong></div>
+      <div class="ww-stat">💧 Vochtigheid <strong>${w.humidity}%</strong></div>
+      <div class="ww-stat">🌅 Zonsopgang <strong>${w.sunrise}</strong></div>
+      <div class="ww-stat">🌇 Zonsondergang <strong>${w.sunset}</strong></div>
+    </div>
+    ${w.forecast?.length ? `
+    <div style="font-family:var(--font-display);font-size:0.58rem;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--txt3);margin-bottom:0.5rem">Vandaag per uur</div>
+    <div class="ww-forecast">
+      ${w.forecast.map(h=>{
+        const tStr = h.time.padStart(4,'0');
+        const hh = tStr.slice(0,-2), mm = tStr.slice(-2);
+        const hIcon = window.weatherIcon ? window.weatherIcon(0) : '🌡️';
+        return `<div class="ww-hour">
+          <div class="ww-hour-time">${hh}:${mm||'00'}</div>
+          <div style="font-size:1rem">${icon}</div>
+          <div class="ww-hour-temp">${h.temp}°</div>
+          <div class="ww-hour-rain">💧${h.rain_chance}%</div>
+        </div>`;
+      }).join('')}
+    </div>` : ''}
+  </div>`;
+}
+
+// ── Boot ─────────────────────────────────────────────────────────────────────
+loadResults();
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (btn.dataset.loaded) return;
+    btn.dataset.loaded = '1';
+    const t = btn.dataset.tab;
+    if (t === 't-qualifying')   loadQualifying();
+    if (t === 't-sprint-quali') loadSprintQuali();
+    if (t === 't-pitstops')     loadPitstops();
+    if (t === 't-incidents')    loadIncidents();
+    if (t === 't-sectors')      loadSectors();
+    if (t === 't-speedtrap')    loadSpeedTrap();
+    if (t === 't-replay')       loadReplay();
+    if (t === 't-weather')      loadWeather();
+    // t-sprint is pre-loaded by checkSprintWeekend()
+  });
+});
+</script>
+</body>
+</html>

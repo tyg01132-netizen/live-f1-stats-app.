@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Live — F1FORLIVE</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .sess-schedule { display:flex;gap:0.6rem;flex-wrap:wrap;margin-bottom:1.75rem }
+    .ss-card { background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:0.7rem 0.9rem;min-width:130px;position:relative;overflow:hidden }
+    .ss-card::before { content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--border) }
+    .ss-card.ss-live { border-color:rgba(225,6,0,0.6);background:linear-gradient(135deg,rgba(225,6,0,0.12),var(--bg2)) }
+    .ss-card.ss-live::before { background:var(--red) }
+    .ss-card.ss-done { opacity:0.45 }
+    .ss-card.ss-next { border-color:rgba(225,100,60,0.4) }
+    .ss-card.ss-next::before { background:rgba(225,100,60,0.6) }
+    .ss-lbl { font-family:var(--font-display);font-size:0.58rem;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--txt3);margin-bottom:3px }
+    .ss-card.ss-live .ss-lbl { color:var(--red) }
+    .ss-card.ss-next .ss-lbl { color:rgba(225,130,80,0.9) }
+    .ss-time { font-size:0.72rem;color:var(--txt2);margin-bottom:3px }
+    .ss-status { font-family:var(--font-display);font-size:0.7rem;font-weight:900 }
+    .ss-card.ss-done .ss-status { color:var(--txt3) }
+    .ss-card.ss-live .ss-status { color:var(--red) }
+    .reminder-btn { background:none;border:1px solid var(--border);border-radius:4px;color:var(--txt3);font-size:0.6rem;font-weight:700;padding:2px 7px;cursor:pointer;margin-top:5px;transition:all 0.15s;display:block }
+    .reminder-btn:hover { border-color:rgba(225,6,0,0.5);color:var(--txt) }
+    .reminder-btn.set { border-color:rgba(0,210,100,0.5);color:var(--green) }
+    .sound-bar { display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);margin-bottom:1.5rem }
+    .sound-toggle { background:none;border:1px solid var(--border);border-radius:4px;color:var(--txt3);font-size:0.7rem;padding:4px 10px;cursor:pointer;transition:all 0.15s }
+    .sound-toggle.active { border-color:rgba(0,210,100,0.5);color:var(--green) }
+    .session-legend { display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0.5rem;margin-top:1rem }
+    .sl-item { display:flex;align-items:center;gap:0.65rem;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:0.55rem 0.85rem }
+    .sl-icon { font-size:1.1rem }
+    .sl-name { font-size:0.8rem;font-weight:700 }
+    .sl-desc { font-size:0.68rem;color:var(--txt3) }
+  </style>
+</head>
+<body>
+<nav class="topnav">
+  <a class="nav-logo" href="/" style="display:flex;align-items:center;gap:8px">
+    <svg width="26" height="26" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="13" fill="#e10600"/><path d="M7 14h14M14 7v14" stroke="white" stroke-width="2.5" stroke-linecap="round"/><circle cx="14" cy="14" r="3" fill="white"/></svg>
+    <span style="font-family:var(--font-display);font-size:1.25rem;font-weight:900;letter-spacing:-0.5px">F1<span style="color:var(--red)">FOR</span>LIVE</span>
+  </a>
+  <ul class="nav-links" id="nav-links">
+    <li><a href="/">Home</a></li><li><a href="/stats">Stats 2026</a></li>
+    <li><a href="/calendar">Kalender</a></li><li><a href="/live" class="active">Live</a></li>
+    <li><a href="/compare">Vergelijk</a></li><li><a href="/map">Kaart</a></li>
+    <li><a href="/predictor">Prognose</a></li><li><a href="/timeline">Tijdlijn</a></li>
+    <li><a href="/f2">F2</a></li><li><a href="/history">Archief</a></li><li><a href="/info">Info</a></li>
+  </ul>
+  <div class="live-pill" id="main-pill"><div class="live-dot"></div><span>Live</span></div>
+</nav>
+
+<div id="live-header"></div>
+<div class="page" style="padding-top:1.5rem">
+  <div id="live-body"><div class="loading"><div class="spinner"></div> Live status ophalen…</div></div>
+</div>
+
+<script src="/static/app.js"></script>
+<script>
+const YEAR = {{ year }};
+let refreshTimer=null, soundEnabled=false, reminders={};
+
+// ── Sound (Web Audio API) ────────────────────────────────────────────────────
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx=null;
+function ensureAudio() { if(!audioCtx&&AudioCtx) audioCtx=new AudioCtx(); return audioCtx; }
+
+function playBeep(freq=880,dur=0.12,vol=0.18,type='sine') {
+  try {
+    const ctx=ensureAudio(); if(!ctx) return;
+    const osc=ctx.createOscillator(), gain=ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.value=freq; osc.type=type;
+    gain.gain.setValueAtTime(vol,ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+dur);
+    osc.start(); osc.stop(ctx.currentTime+dur);
+  } catch(e){}
+}
+function playStartSound() { playBeep(660,0.08);setTimeout(()=>playBeep(880,0.1),90);setTimeout(()=>playBeep(1100,0.15),190); }
+function playAlertSound() { playBeep(440,0.12,0.2,'square');setTimeout(()=>playBeep(550,0.12,0.2,'square'),140); }
+function playTickSound()  { playBeep(1200,0.04,0.05,'triangle'); }
+
+// ── Reminder storage ─────────────────────────────────────────────────────────
+function setReminder(key, label, isoTime) {
+  const t = new Date(isoTime);
+  if (t < new Date()) { alert('Deze sessie is al voorbij!'); return; }
+  reminders[key] = { label, time: t.getTime() };
+  localStorage.setItem('f1_reminders', JSON.stringify(reminders));
+  // Check every minute
+  if (!window._remCheck) {
+    window._remCheck = setInterval(checkReminders, 30000);
+  }
+  return true;
+}
+function checkReminders() {
+  const now = Date.now();
+  for (const [k,r] of Object.entries(reminders)) {
+    const diff = r.time - now;
+    if (diff > 0 && diff < 300000) { // within 5 min
+      if (!r.notified) {
+        r.notified = true;
+        if (soundEnabled) playAlertSound();
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification('🏁 F1FORLIVE', { body: `${r.label} begint over ${Math.round(diff/60000)} minuten!`, icon: '/favicon.ico' });
+        } else {
+          // Fallback: flash tab title
+          let orig=document.title, n=0;
+          const iv=setInterval(()=>{ document.title=n++%2?'⚡ '+r.label+' BIJNA!':orig; if(n>12)clearInterval(iv); },1000);
+        }
+      }
+    }
+  }
+}
+// Load saved reminders
+try { reminders=JSON.parse(localStorage.getItem('f1_reminders')||'{}'); } catch(e){}
+
+// ── Session helpers ──────────────────────────────────────────────────────────
+const SESS_LABELS = { FirstPractice:'VT1', SecondPractice:'VT2', ThirdPractice:'VT3', Qualifying:'Kwalificatie', Sprint:'Sprint Race', SprintQualifying:'Sprint Kwal.' };
+const SESS_ICONS  = { FirstPractice:'🔧', SecondPractice:'🔧', ThirdPractice:'🔧', Qualifying:'⏱', Sprint:'⚡', SprintQualifying:'⚡', Race:'🏁' };
+
+function sessionClass(name) {
+  const n=(name||'').toLowerCase();
+  if(n.includes('race')&&!n.includes('sprint'))return 'race';
+  if(n.includes('sprint'))return 'sprint';
+  if(n.includes('quali')||n.includes('shootout'))return 'qualifying';
+  return 'practice';
+}
+function sessionIcon(name){ const cls=sessionClass(name); return {race:'🏁',sprint:'⚡',qualifying:'⏱',practice:'🔧'}[cls]||'📡'; }
+
+// ── Render session schedule strip ────────────────────────────────────────────
+function renderSchedule(nextRace, activeSession) {
+  if (!nextRace?.sessions) return '';
+  const now = Date.now();
+  const SESS_ORDER = ['FirstPractice','SecondPractice','ThirdPractice','SprintQualifying','Sprint','Qualifying'];
+  const cards = SESS_ORDER.map(k => {
+    const s = nextRace.sessions[k];
+    if (!s?.iso) return '';
+    const t = new Date(s.iso), done=t<=now, isoStr=s.iso;
+    const isLive = activeSession && (activeSession.toLowerCase().includes(SESS_LABELS[k]?.toLowerCase())||false);
+    const dateStr = t.toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'short'});
+    const timeStr = t.toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'});
+    const remKey = `${nextRace.round}_${k}`;
+    const hasRem = !!reminders[remKey];
+    const statusTxt = done ? '✓ Afgelopen' : isLive ? '🔴 LIVE' : '—';
+    const cls = done?'ss-done':isLive?'ss-live':'ss-next';
+    return `<div class="ss-card ${cls}">
+      <div class="ss-lbl">${SESS_ICONS[k]||''} ${SESS_LABELS[k]||k}</div>
+      <div class="ss-time">${dateStr} · ${timeStr}</div>
+      <div class="ss-status">${statusTxt}</div>
+      ${!done&&!isLive?`<button class="reminder-btn ${hasRem?'set':''}" onclick="toggleReminder('${remKey}','${SESS_LABELS[k]} ${nextRace.name}','${isoStr}',this)">
+        ${hasRem?'🔔 Reminder ingesteld':'🔕 Reminder instellen'}
+      </button>`:''}
+    </div>`;
+  }).join('');
+  // Race card
+  const raceT = new Date(nextRace.iso||(nextRace.date+'T'+(nextRace.time||'14:00:00')+'Z'));
+  const raceDone=raceT<=now, raceRemKey=`${nextRace.round}_Race`, hasRaceRem=!!reminders[raceRemKey];
+  const raceDateStr=raceT.toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'short'});
+  const raceTimeStr=raceT.toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'});
+  const raceCls=raceDone?'ss-done':'ss-next';
+  const raceStatusTxt=raceDone?'✓ Afgelopen':'—';
+  return cards + `<div class="ss-card ${raceCls}" style="border-color:${raceDone?'var(--border)':'rgba(225,6,0,0.5)'}">
+    <div class="ss-lbl">🏁 RACE</div>
+    <div class="ss-time">${raceDateStr} · ${raceTimeStr}</div>
+    <div class="ss-status" style="color:${raceDone?'var(--txt3)':'var(--red)'}">${raceStatusTxt}</div>
+    ${!raceDone?`<button class="reminder-btn ${hasRaceRem?'set':''}" onclick="toggleReminder('${raceRemKey}','Race ${nextRace.name}','${nextRace.iso||''}',this)">
+      ${hasRaceRem?'🔔 Reminder ingesteld':'🔕 Reminder instellen'}
+    </button>`:''}
+  </div>`;
+}
+
+function toggleReminder(key, label, isoTime, btn) {
+  if (reminders[key]) {
+    delete reminders[key];
+    localStorage.setItem('f1_reminders',JSON.stringify(reminders));
+    btn.textContent='🔕 Reminder instellen'; btn.classList.remove('set');
+  } else {
+    // Request notification permission
+    if ('Notification' in window && Notification.permission==='default') {
+      Notification.requestPermission();
+    }
+    ensureAudio(); // unlock audio context
+    if(setReminder(key,label,isoTime)) {
+      btn.textContent='🔔 Reminder ingesteld'; btn.classList.add('set');
+      if(soundEnabled) playTickSound();
+    }
+  }
+}
+
+// ── Main init ────────────────────────────────────────────────────────────────
+async function init() {
+  const [status, nextRace] = await Promise.all([get('/api/live/status'), get('/api/next-race')]);
+  const header=el('live-header');
+
+  // Sound toggle bar
+  const soundBar=document.createElement('div');
+  soundBar.className='page'; soundBar.style.paddingBottom='0';
+  soundBar.innerHTML=`<div class="sound-bar">
+    <span style="font-size:0.72rem;color:var(--txt3)">🔊 Geluid</span>
+    <button class="sound-toggle" id="sound-btn" onclick="toggleSound()">Uit</button>
+    <span style="font-size:0.68rem;color:var(--txt3);margin-left:auto">Geluidseffecten bij live events, race control berichten en reminders</span>
+  </div>`;
+  document.body.insertBefore(soundBar, el('live-body').parentElement);
+
+  if (!status) { renderOffline(nextRace,'Verbinding mislukt'); return; }
+
+  if (status.active) {
+    const cls=sessionClass(status.session_name);
+    el('main-pill')?.classList.add('is-live');
+    if(soundEnabled) playStartSound();
+    header.innerHTML=`<div class="live-header">
+      <div class="lh-tag">${sessionIcon(status.session_name)} ${status.session_name}
+        <span class="session-type-badge ${cls}" style="margin-left:8px">${cls.toUpperCase()}</span>
+      </div>
+      <div class="lh-title">${status.meeting_name}</div>
+      <div class="lh-meta">
+        <span>📍 ${status.circuit}</span>
+        <div class="live-badge"><div class="live-badge-dot"></div>LIVE</div>
+        <span style="font-size:0.7rem;color:var(--txt3)">↻ elke 5s</span>
+      </div>
+    </div>`;
+
+    // Session schedule above timing
+    if (nextRace?.sessions) {
+      const sched=document.createElement('div');
+      sched.className='page'; sched.style='padding-top:0;padding-bottom:0';
+      sched.innerHTML=`<div class="sess-schedule">${renderSchedule(nextRace, status.session_name)}</div>`;
+      document.body.insertBefore(sched, el('live-body').parentElement);
+    }
+
+    await renderLive(cls);
+    refreshTimer=setInterval(()=>renderLive(cls),5000);
+  } else {
+    header.innerHTML='';
+    renderOffline(nextRace, status.reason||'');
+  }
+}
+
+function toggleSound() {
+  soundEnabled=!soundEnabled;
+  const btn=el('sound-btn');
+  btn.textContent=soundEnabled?'Aan':'Uit';
+  btn.classList.toggle('active',soundEnabled);
+  ensureAudio();
+  if(soundEnabled) playTickSound();
+}
+
+async function renderLive(sessionCls) {
+  const [timing,weather,messages]=await Promise.all([
+    get('/api/live/timing'), get('/api/live/weather'), get('/api/live/messages')
+  ]);
+  const body=el('live-body');
+  let html='';
+
+  if (weather?.air_temperature!=null) {
+    html+=`<div class="weather-row">
+      <div class="wi">🌡️ Lucht <strong>${weather.air_temperature}°C</strong></div>
+      <div class="wi">🛣️ Baan <strong>${weather.track_temperature}°C</strong></div>
+      <div class="wi">💧 <strong>${weather.humidity}%</strong></div>
+      <div class="wi">💨 <strong>${weather.wind_speed} m/s</strong></div>
+      ${weather.rainfall?'<div class="wi">🌧️ <strong>Regen</strong></div>':''}
+    </div>`;
+  }
+
+  if (timing?.length) {
+    html+=`<div class="card" style="margin-bottom:1.25rem">
+      <div class="card-head"><span class="card-title">Live Timing Tower</span><span style="font-size:0.7rem;color:var(--txt3)">${timing.length} coureurs</span></div>
+      <div>
+        <div class="tower-head"><div>P</div><div></div><div>CODE</div><div>NAAM</div><div style="text-align:right">GAP</div><div style="text-align:right">RONDT.</div><div style="text-align:right">RND</div></div>
+        ${timing.map(d=>{
+          const col='#'+(d.team_colour||'555555'), p=d.position;
+          const pc=p==1?'p1':p==2?'p2':p==3?'p3':'';
+          return `<div class="tower-row ${p==1?'leader':''}">
+            <div class="tr-pos ${pc}">${p}</div>
+            <div style="background:${col};border-radius:2px;align-self:stretch;min-height:28px"></div>
+            <div class="tr-code" style="color:${col}">${d.code||'???'}</div>
+            <div><div style="font-size:0.82rem;font-weight:700">${d.name||'—'}</div><div style="font-size:0.68rem;color:var(--txt3)">${d.team||''}</div></div>
+            <div class="tr-gap">${d.gap||'—'}</div>
+            <div class="tr-lap" style="${p===1?'color:var(--green)':''}">${d.lap_time||'—'}</div>
+            <div class="tr-lapnum">${d.lap_number||'—'}</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }
+
+  if (messages?.length) {
+    const msgs=[...messages].reverse().slice(0,25);
+    // Play sound for new SC/red flag messages
+    const latest=msgs[0];
+    if(soundEnabled&&latest){
+      const f=(latest.flag||'').toUpperCase();
+      if(f.includes('SAFETY')||f.includes('RED'))playAlertSound();
+      else if(f.includes('YELLOW'))playBeep(660,0.1,0.12);
+    }
+    html+=`<div class="card">
+      <div class="card-head"><span class="card-title">Race Control Berichten</span></div>
+      <div class="card-body">${msgs.map(m=>{
+        const f=(m.flag||'').toUpperCase(), cat=(m.category||'').toLowerCase();
+        let cls='mb-info';
+        if(f.includes('YELLOW')||f.includes('DOUBLE'))cls='mb-yellow';
+        else if(f.includes('RED')||cat.includes('red'))cls='mb-red';
+        else if(f.includes('GREEN')||cat.includes('green'))cls='mb-green';
+        else if(f.includes('SAFETY')||cat.includes('safety'))cls='mb-sc';
+        return `<div class="msg-item">
+          <div class="msg-badge ${cls}">${f||cat||'MSG'}</div>
+          <div class="msg-text">${m.message||m.msg||'—'}</div>
+          <div class="msg-time">${(m.date||'').slice(11,19)||''}</div>
+        </div>`;
+      }).join('')}</div>
+    </div>`;
+  }
+  body.innerHTML=html||'<div class="empty"><div class="icon">📡</div>Geen live data beschikbaar</div>';
+}
+
+async function renderOffline(nextRace, reason) {
+  const days=nextRace?daysUntil(nextRace.date):0;
+  const schedule=nextRace?renderSchedule(nextRace, null):'';
+
+  el('live-body').innerHTML=`
+    <div class="no-live">
+      <div class="no-live-icon">📡</div>
+      <div class="no-live-title">Geen actieve sessie</div>
+      <div class="no-live-sub">Er is op dit moment geen F1-sessie bezig. Live timing is beschikbaar tijdens alle sessietypen.</div>
+      ${nextRace?`<div style="margin-top:1.5rem;text-align:left;width:100%;max-width:520px">
+        <div style="font-family:var(--font-display);font-size:0.6rem;font-weight:900;letter-spacing:3px;color:var(--txt3);margin-bottom:0.75rem">AANKOMEND WEEKEND — ${flagImg(nextRace.country,16)} ${nextRace.name}</div>
+        <div class="sess-schedule" style="flex-wrap:wrap">${schedule}</div>
+      </div>`:''}
+    </div>
+    <div style="margin-top:2rem">
+      <div style="font-family:var(--font-display);font-size:0.6rem;font-weight:900;letter-spacing:3px;color:var(--txt3);margin-bottom:0.75rem">LIVE BIJ ALLE SESSIES</div>
+      <div class="session-legend">
+        <div class="sl-item"><div class="sl-icon">🔧</div><div><div class="sl-name">Vrije Training 1/2/3</div><div class="sl-desc">Setup work, lange runs, bandendata</div></div></div>
+        <div class="sl-item"><div class="sl-icon">⚡</div><div><div class="sl-name">Sprint Kwalificatie</div><div class="sl-desc">SQ1/SQ2/SQ3 — sprintgrid bepalen</div></div></div>
+        <div class="sl-item"><div class="sl-icon">⚡</div><div><div class="sl-name">Sprint Race</div><div class="sl-desc">~100 km, eigen punten, extra actie</div></div></div>
+        <div class="sl-item"><div class="sl-icon">⏱</div><div><div class="sl-name">Kwalificatie</div><div class="sl-desc">Q1/Q2/Q3 — de gridvolgorde</div></div></div>
+        <div class="sl-item"><div class="sl-icon">🏁</div><div><div class="sl-name">Grand Prix Race</div><div class="sl-desc">305+ km, volledig puntenklassement</div></div></div>
+        <div class="sl-item"><div class="sl-icon">🔔</div><div><div class="sl-name">Reminders instellen</div><div class="sl-desc">Klik op een sessiekaartje om een melding in te stellen</div></div></div>
+      </div>
+    </div>`;
+}
+
+init();
+</script>
+</body>
+</html>

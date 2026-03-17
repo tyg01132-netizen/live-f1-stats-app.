@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prognose & Analyse — F1FORLIVE</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .pred-row { display:grid;grid-template-columns:160px 1fr auto;align-items:center;gap:0.75rem;margin-bottom:6px; }
+    .pred-name { font-size:0.82rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+    .pred-team { font-size:0.65rem;color:var(--txt3); }
+    .pred-track { height:28px;background:var(--bg4);border-radius:4px;overflow:hidden;display:flex;position:relative; }
+    .pred-current-bar { height:100%;display:flex;align-items:center;padding:0 8px;position:relative;z-index:2; }
+    .pred-extra-bar { height:100%;opacity:0.18; }
+    .pred-pts-lbl { font-family:var(--font-mono);font-size:0.72rem;font-weight:700;width:90px;text-align:right;flex-shrink:0; }
+    .pred-dead { opacity:0.3; }
+    .pred-crown { color:var(--gold);font-size:0.85rem;margin-right:4px; }
+
+    .strat-row { display:flex;align-items:center;gap:0.75rem;margin-bottom:5px; }
+    .strat-name { width:110px;font-size:0.75rem;font-weight:700;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+    .strat-track { flex:1;height:22px;background:var(--bg4);border-radius:3px;overflow:hidden;position:relative;display:flex; }
+    .strat-seg { height:100%;display:flex;align-items:center;justify-content:center; }
+    .compound-soft { background:#e8002d; }
+    .compound-medium { background:#ffd700; }
+    .compound-hard { background:#c8c8c8; }
+    .compound-intermediate { background:#39b54a; }
+    .compound-wet { background:#0067ff; }
+    .compound-unknown { background:var(--bg5); }
+
+    .race-sel-row { display:flex;gap:0.75rem;align-items:end;flex-wrap:wrap;margin-bottom:1.5rem; }
+  </style>
+</head>
+<body>
+<nav class="topnav">
+  <a class="nav-logo" href="/" style="display:flex;align-items:center;gap:8px">
+    <svg width="26" height="26" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="13" fill="#e10600"/><path d="M7 14h14M14 7v14" stroke="white" stroke-width="2.5" stroke-linecap="round"/><circle cx="14" cy="14" r="3" fill="white"/></svg>
+    <span style="font-family:var(--font-display);font-size:1.25rem;font-weight:900;letter-spacing:-0.5px">F1<span style="color:var(--red)">FOR</span>LIVE</span>
+  </a>
+  <ul class="nav-links" id="nav-links">
+    <li><a href="/">Home</a></li><li><a href="/stats">Stats 2026</a></li>
+    <li><a href="/calendar">Kalender</a></li><li><a href="/live">Live</a></li>
+    <li><a href="/compare">Vergelijk</a></li><li><a href="/map">Kaart</a></li>
+    <li><a href="/predictor" class="active">Prognose</a></li><li><a href="/timeline">Tijdlijn</a></li>
+    <li><a href="/f2">F2</a></li><li><a href="/history">Archief</a></li><li><a href="/info">Info</a></li>
+  </ul>
+  <div class="live-pill"><div class="live-dot"></div><span>Live</span></div>
+  <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+</nav>
+<script>
+(function(){
+  var h=document.getElementById('nav-hamburger'),n=document.getElementById('nav-links');
+  if(h)h.addEventListener('click',function(){h.classList.toggle('open');n.classList.toggle('open');});
+  document.querySelectorAll('.nav-links a').forEach(function(a){a.addEventListener('click',function(){h&&h.classList.remove('open');n&&n.classList.remove('open');});});
+})();
+</script>
+
+<div class="page">
+  <div class="page-title">Analyse & Prognose</div>
+  <div class="page-sub">Kampioenschapsprognose · Bandenstrategie · Rondetijden</div>
+
+  <div class="tab-root" style="margin-top:1.5rem">
+    <div class="tabs" id="pred-tabs">
+      <button class="tab-btn active" data-tab="pt-pred">🔮 Kampioenschap</button>
+      <button class="tab-btn" data-tab="pt-strat">🔴 Bandenstrategie</button>
+      <button class="tab-btn" data-tab="pt-laps">⏱ Rondetijden</button>
+    </div>
+
+    <!-- PREDICTOR -->
+    <div class="tab-pane active" id="pt-pred">
+      <div id="pred-content"><div class="loading"><div class="spinner"></div> Berekenen...</div></div>
+    </div>
+
+    <!-- TYRE STRATEGY -->
+    <div class="tab-pane" id="pt-strat">
+      <div class="race-sel-row">
+        <div>
+          <div class="section-label" style="margin-bottom:0.4rem">Race selecteren</div>
+          <select id="strat-race-sel" class="input" style="width:280px"></select>
+        </div>
+        <button class="btn btn-red" id="strat-load-btn">Strategie laden →</button>
+      </div>
+      <div id="strat-content"><div class="empty"><div class="icon">🔴</div>Selecteer een race</div></div>
+    </div>
+
+    <!-- LAP TIMES -->
+    <div class="tab-pane" id="pt-laps">
+      <div class="race-sel-row">
+        <div>
+          <div class="section-label" style="margin-bottom:0.4rem">Race selecteren</div>
+          <select id="laps-race-sel" class="input" style="width:280px"></select>
+        </div>
+        <button class="btn btn-red" id="laps-load-btn">Rondetijden laden →</button>
+      </div>
+      <div id="laps-content"><div class="empty"><div class="icon">⏱</div>Selecteer een race</div></div>
+    </div>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+<script>
+const YEAR = {{ year }};
+initTabsIn(document.querySelector('.tab-root'));
+
+// Load calendar for race selection
+async function init() {
+  const [cal, nextRace] = await Promise.all([get('/api/calendar'), get('/api/next-race')]);
+  const pastRaces = (cal||[]).filter(r=>r.past);
+  const upcomingRaces = (cal||[]).filter(r=>!r.past);
+
+  // Show next race banner on predictor tab
+  if (nextRace?.name) {
+    const banner = document.createElement('div');
+    banner.style.cssText = 'background:linear-gradient(135deg,rgba(225,6,0,0.1),var(--bg2));border:1px solid rgba(225,6,0,0.3);border-radius:var(--r2);padding:0.85rem 1.25rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap';
+    banner.innerHTML = `<div style="font-family:var(--font-display);font-size:0.6rem;font-weight:900;letter-spacing:3px;color:var(--red)">VOLGENDE RACE</div>
+      <div style="font-family:var(--font-display);font-size:1.1rem;font-weight:900">${flagImg(nextRace.country,16)} ${nextRace.name}</div>
+      <div style="font-size:0.78rem;color:var(--txt3)">📍 ${nextRace.circuit} · <strong style="color:var(--txt)">${fmtDate(nextRace.date)}</strong></div>
+      ${upcomingRaces.length?`<div style="font-size:0.72rem;color:var(--txt3)">Nog ${upcomingRaces.length} races te gaan in ${YEAR}</div>`:''}`;
+    el('pred-content').parentElement.insertBefore(banner, el('pred-content'));
+  }
+
+  // Race selector: past races for strategy/laps, with "nog niet beschikbaar" hint for upcoming
+  ['strat-race-sel','laps-race-sel'].forEach(id=>{
+    const sel = el(id);
+    if (pastRaces.length) {
+      sel.innerHTML = pastRaces.map(r=>`<option value="${r.year}_${r.round}">${r.name} (R${r.round})</option>`).join('');
+    } else {
+      sel.innerHTML = `<option value="">Nog geen races verreden in ${YEAR}</option>`;
+    }
+    if (upcomingRaces.length) {
+      sel.innerHTML += `<optgroup label="Aankomend (nog geen data)">` + upcomingRaces.slice(0,5).map(r=>`<option value="" disabled>${r.name} (R${r.round}) — nog niet beschikbaar</option>`).join('') + `</optgroup>`;
+    }
+  });
+
+  loadPredictor();
+}
+
+// ── PREDICTOR ──────────────────────────────────────────────────────────────
+async function loadPredictor() {
+  const data = await get('/api/predictor');
+  const wrap = el('pred-content');
+  if (!data?.standings?.length) { empty('pred-content','📊','Geen data'); return; }
+
+  const { standings, remaining_races, max_per_race } = data;
+  const leader = standings[0];
+  const maxPossible = leader.max_possible;
+
+  wrap.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:0.75rem;margin-bottom:1.5rem">
+      <div class="card"><div class="card-body">
+        <div class="section-label">Resterende races</div>
+        <div style="font-family:var(--font-display);font-size:2.5rem;font-weight:900;color:var(--red)">${remaining_races}</div>
+      </div></div>
+      <div class="card"><div class="card-body">
+        <div class="section-label">Max per race</div>
+        <div style="font-family:var(--font-display);font-size:2.5rem;font-weight:900">${max_per_race}</div>
+        <div style="font-size:0.72rem;color:var(--txt3)">punten (25+1)</div>
+      </div></div>
+      <div class="card"><div class="card-body">
+        <div class="section-label">Leider</div>
+        <div style="font-family:var(--font-display);font-size:1.3rem;font-weight:900;color:var(--gold)">${leader.name.split(' ').pop()}</div>
+        <div style="font-size:0.72rem;color:var(--txt3)">${leader.current_points} pts</div>
+      </div></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="card-title">🔮 Kampioenschap prognose</span><span style="font-size:0.72rem;color:var(--txt3)">Donker = huidig · Licht = max haalbaar</span></div>
+      <div class="card-body">
+        ${standings.map((d,i)=>{
+          const col=teamColor(d.team_id);
+          const curPct=(d.current_points/maxPossible*100).toFixed(1);
+          const extraPct=((d.max_possible-d.current_points)/maxPossible*100).toFixed(1);
+          const alive=d.mathematically_alive;
+          const isLeader=d.position===1;
+          return `<div class="pred-row ${alive?'':'pred-dead'}">
+            <div>
+              <div class="pred-name">${isLeader?'<span class="pred-crown">👑</span>':''}${d.name}</div>
+              <div class="pred-team" style="color:${col}">${d.team_id||''}</div>
+            </div>
+            <div class="pred-track">
+              <div class="pred-current-bar" style="width:${curPct}%;background:${col}">
+                <span style="font-family:var(--font-mono);font-size:0.68rem;font-weight:700;color:#fff;white-space:nowrap">${d.current_points}</span>
+              </div>
+              <div class="pred-extra-bar" style="width:${extraPct}%;background:${col}"></div>
+            </div>
+            <div class="pred-pts-lbl" style="color:${alive?col:'var(--txt3)'}">
+              max ${d.max_possible}<br>
+              <span style="font-size:0.62rem;color:var(--txt3)">${alive?'✓ Kansrijk':'✗ Uitgespeeld'}</span>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+}
+
+// ── TYRE STRATEGY ──────────────────────────────────────────────────────────
+el('strat-load-btn').onclick = async () => {
+  const [raceYear,round] = (el('strat-race-sel').value||'_').split('_');
+  if(!round){empty('strat-content','⏳','Selecteer een al verreden race');return;}
+  if (!round) return;
+  el('strat-content').innerHTML = '<div class="loading"><div class="spinner"></div> Pitstop data laden...</div>';
+  const [results, pitstops] = await Promise.all([
+    get(`/api/results/${raceYear||YEAR}/${round}`),
+    get(`/api/pitstops/${raceYear||YEAR}/${round}`),
+  ]);
+  renderStrategy(results, pitstops, round);
+};
+
+function renderStrategy(results, pitstops, round) {
+  const wrap = el('strat-content');
+  if (!results?.results?.length) { empty('strat-content','🔴','Geen data voor deze race'); return; }
+
+  const maxLaps = Math.max(...results.results.map(r=>parseInt(r.laps)||0));
+  if (!maxLaps) { empty('strat-content','🔴','Rondetelling niet beschikbaar'); return; }
+
+  // Build pit map: driverId -> [stopLap1, stopLap2, ...]
+  const pits = {};
+  (pitstops||[]).forEach(p=>{
+    if (!pits[p.driverId]) pits[p.driverId] = [];
+    pits[p.driverId].push(parseInt(p.lap)||0);
+  });
+
+  const COMPOUNDS = ['SOFT','MEDIUM','HARD','INTERMEDIATE','WET'];
+  // Cycle compounds based on position in strategy (simplified)
+  function guessCompound(stint, stintIndex, totalStints) {
+    // Simple heuristic: first/last stint often soft, middle medium/hard
+    if (totalStints === 1) return 'MEDIUM';
+    if (stintIndex === 0) return 'SOFT';
+    if (stintIndex === totalStints-1) return 'SOFT';
+    return 'MEDIUM';
+  }
+
+  wrap.innerHTML = `<div class="card">
+    <div class="card-head">
+      <span class="card-title">Bandenstrategie — ${results.race?.name||''}</span>
+      <span style="font-size:0.72rem;color:var(--txt3)">${maxLaps} rondes · ${(pitstops||[]).length} pitstops totaal</span>
+    </div>
+    <div class="card-body" style="overflow-x:auto">
+      <div style="min-width:500px">
+        ${results.results.slice(0,20).map(r=>{
+          const stops = pits[r.driver_id] || [];
+          stops.sort((a,b)=>a-b);
+          const laps = parseInt(r.laps)||maxLaps;
+          // Build stints: from 0 to stop1, stop1 to stop2, etc.
+          const stintBreaks = [0, ...stops, laps];
+          const col = teamColor(r.team_id);
+          const stints = [];
+          for (let i=0;i<stintBreaks.length-1;i++) {
+            const from=stintBreaks[i], to=stintBreaks[i+1];
+            const pct=((to-from)/maxLaps*100).toFixed(1);
+            const cmp=guessCompound(to-from, i, stintBreaks.length-1);
+            stints.push({from,to,pct,cmp});
+          }
+          return `<div class="strat-row">
+            <div class="strat-name" title="${r.name}">${r.name.split(' ').pop()}</div>
+            <div class="strat-track">
+              ${stints.map(s=>`<div class="strat-seg compound-${s.cmp.toLowerCase()}" style="width:${s.pct}%;border-right:2px solid rgba(0,0,0,0.2)" title="${s.cmp} L${s.from+1}–${s.to}">
+                ${parseFloat(s.pct)>10?`<span style="font-size:0.55rem;font-weight:700;color:rgba(0,0,0,0.6);padding:0 3px">${s.cmp.slice(0,1)}</span>`:''}
+              </div>`).join('')}
+            </div>
+            <div style="font-family:var(--font-mono);font-size:0.68rem;color:var(--txt3);width:50px;text-align:right">${stops.length}x stop</div>
+          </div>`;
+        }).join('')}
+        <div style="display:flex;gap:1rem;margin-top:1rem;flex-wrap:wrap">
+          ${['SOFT','MEDIUM','HARD'].map(c=>`<span><span class="compound-${c.toLowerCase()}" style="display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:4px;vertical-align:middle"></span><span style="font-size:0.72rem;color:var(--txt3)">${c}</span></span>`).join('')}
+          <span style="font-size:0.7rem;color:var(--txt3);font-style:italic">* Compound-indeling is geschat o.b.v. stint-positie (Jolpica bevat geen compound data)</span>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── LAP TIMES ──────────────────────────────────────────────────────────────
+el('laps-load-btn').onclick = async () => {
+  const [lapsYear,round] = (el('laps-race-sel').value||'_').split('_');
+  if(!round){empty('laps-content','⏳','Selecteer een al verreden race');return;}
+  el('laps-content').innerHTML = '<div class="loading"><div class="spinner"></div> Rondetijden laden (kan even duren)...</div>';
+  const [laps, results] = await Promise.all([
+    get(`/api/laps/${lapsYear||YEAR}/${round}`),
+    get(`/api/results/${lapsYear||YEAR}/${round}`),
+  ]);
+  renderLapTimes(laps, results);
+};
+
+function renderLapTimes(laps, results) {
+  const wrap = el('laps-content');
+  if (!laps || !Object.keys(laps).length) { empty('laps-content','⏱','Geen rondetijden beschikbaar'); return; }
+  if (!results?.results?.length) { empty('laps-content','⏱','Geen race data'); return; }
+
+  function parseTime(t) {
+    if (!t) return null;
+    const m=t.match(/^(\d+):(\d+\.\d+)$/);
+    if (m) return parseInt(m[1])*60+parseFloat(m[2]);
+    const s=parseFloat(t); return isNaN(s)?null:s;
+  }
+
+  // Top 6 finishers
+  const top6 = results.results.slice(0,6).map(r=>r.driver_id).filter(did=>laps[did]);
+  if (!top6.length) { empty('laps-content','⏱','Geen koppeling gevonden'); return; }
+
+  const maxLap = Math.max(...top6.map(did=>laps[did].times.length));
+  const COLORS = top6.map(did=>{
+    const r=results.results.find(r=>r.driver_id===did);
+    return teamColor(r?.team_id||'');
+  });
+
+  // Build canvas chart
+  wrap.innerHTML = `<div class="card">
+    <div class="card-head"><span class="card-title">Rondetijden — ${results.race?.name||''}</span></div>
+    <div class="card-body">
+      <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem">
+        ${top6.map((did,i)=>{
+          const r=results.results.find(r=>r.driver_id===did);
+          return `<div style="display:flex;align-items:center;gap:5px">
+            <div style="width:12px;height:3px;border-radius:2px;background:${COLORS[i]}"></div>
+            <span style="font-size:0.72rem;font-weight:700">${r?.code||did.slice(0,3).toUpperCase()}</span>
+          </div>`;
+        }).join('')}
+      </div>
+      <canvas id="laps-canvas" style="width:100%;height:320px"></canvas>
+    </div>
+  </div>`;
+
+  // Draw chart using canvas 2D
+  setTimeout(()=>{
+    const canvas = document.getElementById('laps-canvas');
+    if (!canvas) return;
+    canvas.width = canvas.offsetWidth * devicePixelRatio;
+    canvas.height = 320 * devicePixelRatio;
+    canvas.style.height = '320px';
+    const ctx = canvas.getContext('2d');
+    ctx.scale(devicePixelRatio, devicePixelRatio);
+    const W=canvas.offsetWidth, H=320;
+    const pad={l:50,r:20,t:20,b:30};
+    const cW=W-pad.l-pad.r, cH=H-pad.t-pad.b;
+
+    // Gather all valid times
+    let minT=Infinity, maxT=0;
+    const series = top6.map(did=>{
+      const times = laps[did].times.map(parseTime).filter(t=>t&&t>0&&t<300);
+      times.forEach(t=>{if(t<minT)minT=t;if(t>maxT)maxT=t;});
+      return {did, times};
+    });
+    if(minT===Infinity){empty('laps-content','⏱','Tijden onleesbaar');return;}
+    const range = maxT-minT||1;
+
+    // Background
+    ctx.fillStyle='rgba(255,255,255,0.02)';
+    ctx.fillRect(pad.l,pad.t,cW,cH);
+
+    // Grid lines
+    ctx.strokeStyle='rgba(255,255,255,0.06)';
+    ctx.lineWidth=1;
+    for(let i=0;i<=4;i++){
+      const y=pad.t+cH/4*i;
+      ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(pad.l+cW,y);ctx.stroke();
+    }
+
+    // Y axis labels
+    ctx.fillStyle='rgba(255,255,255,0.3)';
+    ctx.font=`10px monospace`;
+    ctx.textAlign='right';
+    for(let i=0;i<=4;i++){
+      const t=maxT-(range/4*i);
+      const y=pad.t+cH/4*i;
+      const min=Math.floor(t/60), sec=(t%60).toFixed(1);
+      ctx.fillText(`${min}:${sec.padStart(4,'0')}`,pad.l-4,y+3);
+    }
+
+    // X axis
+    ctx.fillStyle='rgba(255,255,255,0.3)';
+    ctx.textAlign='center';
+    ctx.font='10px monospace';
+    const xSteps=Math.min(maxLap,10);
+    for(let i=0;i<=xSteps;i++){
+      const lap=Math.round(maxLap/xSteps*i);
+      const x=pad.l+lap/maxLap*cW;
+      ctx.fillText(lap,x,pad.t+cH+14);
+    }
+
+    // Lines
+    series.forEach(({did,times},si)=>{
+      if(!times.length)return;
+      ctx.strokeStyle=COLORS[si];
+      ctx.lineWidth=2;
+      ctx.globalAlpha=0.85;
+      ctx.beginPath();
+      times.forEach((t,lap)=>{
+        const x=pad.l+(lap/maxLap)*cW;
+        const y=pad.t+((maxT-t)/range)*cH;
+        lap===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+      });
+      ctx.stroke();
+    });
+    ctx.globalAlpha=1;
+  },100);
+}
+
+init();
+</script>
+</body>
+</html>

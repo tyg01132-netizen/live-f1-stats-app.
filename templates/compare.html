@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Vergelijker — F1FORLIVE</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .cmp-panel { background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:1.25rem 1.5rem;margin-bottom:1.5rem }
+    .driver-grid { display:grid;grid-template-columns:1fr 60px 1fr;gap:1rem;align-items:end;margin-bottom:1rem }
+    .vs-lbl { font-family:var(--font-display);font-size:1.4rem;font-weight:900;color:var(--red);text-align:center;padding-bottom:0.4rem }
+    .stat-row { display:grid;grid-template-columns:1fr 120px 1fr;align-items:center;gap:0.5rem;padding:0.6rem 0;border-bottom:1px solid rgba(255,255,255,0.04) }
+    .stat-val { font-family:var(--font-display);font-size:1.35rem;font-weight:900 }
+    .stat-val.big { font-size:1.8rem }
+    .stat-lbl { font-family:var(--font-display);font-size:0.58rem;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--txt3);text-align:center }
+    .stat-bar-wrap { display:grid;grid-template-columns:1fr 1fr;gap:3px;height:5px;margin-top:3px }
+    .stat-bar { height:5px;border-radius:3px }
+    .sc-col { background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden }
+    .sc-yr { font-family:var(--font-display);font-size:2.5rem;font-weight:900;padding:1rem 1.25rem .25rem;border-bottom:1px solid var(--border) }
+    .sc-body { padding:1.25rem }
+    .drv-bar-row { display:flex;align-items:center;gap:0.5rem;margin-bottom:3px }
+    .error-hint { background:rgba(225,6,0,0.08);border:1px solid rgba(225,6,0,0.2);border-radius:var(--r);padding:0.75rem 1rem;font-size:0.78rem;color:var(--txt3) }
+  </style>
+</head>
+<body>
+<nav class="topnav">
+  <a class="nav-logo" href="/" style="display:flex;align-items:center;gap:8px">
+    <svg width="26" height="26" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="13" fill="#e10600"/><path d="M7 14h14M14 7v14" stroke="white" stroke-width="2.5" stroke-linecap="round"/><circle cx="14" cy="14" r="3" fill="white"/></svg>
+    <span style="font-family:var(--font-display);font-size:1.25rem;font-weight:900;letter-spacing:-0.5px">F1<span style="color:var(--red)">FOR</span>LIVE</span>
+  </a>
+  <ul class="nav-links" id="nav-links">
+    <li><a href="/">Home</a></li><li><a href="/stats">Stats 2026</a></li>
+    <li><a href="/calendar">Kalender</a></li><li><a href="/live">Live</a></li>
+    <li><a href="/compare" class="active">Vergelijk</a></li><li><a href="/map">Kaart</a></li>
+    <li><a href="/predictor">Prognose</a></li><li><a href="/timeline">Tijdlijn</a></li>
+    <li><a href="/f2">F2</a></li><li><a href="/history">Archief</a></li><li><a href="/info">Info</a></li>
+  </ul>
+  <div class="live-pill"><div class="live-dot"></div><span>Live</span></div>
+  <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+</nav>
+<script>
+(function(){
+  var h=document.getElementById('nav-hamburger'),n=document.getElementById('nav-links');
+  if(h)h.addEventListener('click',function(){h.classList.toggle('open');n.classList.toggle('open');});
+  document.querySelectorAll('.nav-links a').forEach(function(a){a.addEventListener('click',function(){h&&h.classList.remove('open');n&&n.classList.remove('open');});});
+})();
+</script>
+<div class="page">
+  <div class="page-title">Vergelijker</div>
+  <div class="page-sub">Coureur vs Coureur · Seizoen vs Seizoen</div>
+
+  <div class="tab-root" style="margin-top:1.5rem">
+    <div class="tabs" id="cmp-tabs">
+      <button class="tab-btn active" data-tab="cmp-h2h">⚔️ Coureur vs Coureur</button>
+      <button class="tab-btn" data-tab="cmp-season">📊 Seizoen vs Seizoen</button>
+    </div>
+
+    <!-- HEAD TO HEAD -->
+    <div class="tab-pane active" id="cmp-h2h">
+      <div class="cmp-panel">
+        <div class="driver-grid">
+          <div>
+            <div class="section-label" style="margin-bottom:0.4rem">Coureur 1</div>
+            <select id="d1-sel" class="input" style="width:100%"><option value="">Laden…</option></select>
+          </div>
+          <div class="vs-lbl">VS</div>
+          <div>
+            <div class="section-label" style="margin-bottom:0.4rem">Coureur 2</div>
+            <select id="d2-sel" class="input" style="width:100%"><option value="">Laden…</option></select>
+          </div>
+        </div>
+        <button class="btn btn-red" id="h2h-btn" style="width:100%">Vergelijk carrières →</button>
+      </div>
+      <div id="h2h-result"></div>
+    </div>
+
+    <!-- SEASON VS SEASON -->
+    <div class="tab-pane" id="cmp-season">
+      <div class="cmp-panel">
+        <div style="display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap;margin-bottom:1rem">
+          <div>
+            <div class="section-label" style="margin-bottom:0.4rem">Seizoen 1</div>
+            <select id="y1-sel" class="input" style="width:100px"></select>
+          </div>
+          <div class="vs-lbl" style="padding-bottom:0.4rem">VS</div>
+          <div>
+            <div class="section-label" style="margin-bottom:0.4rem">Seizoen 2</div>
+            <select id="y2-sel" class="input" style="width:100px"></select>
+          </div>
+          <button class="btn btn-red" id="sc-btn">Vergelijk →</button>
+        </div>
+        <div class="error-hint">ℹ️ Seizoensdata laadt van Jolpica API — dit kan 5-10 seconden duren voor oudere jaren</div>
+      </div>
+      <div id="sc-result"></div>
+    </div>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+<script>
+const YEAR = {{ year }};
+initTabsIn(document.querySelector('.tab-root'));
+
+// Fallback driver list (used if API not yet loaded)
+const FALLBACK_DRIVERS = [
+  {id:'max_verstappen',name:'Max Verstappen'},{id:'lando_norris',name:'Lando Norris'},
+  {id:'charles_leclerc',name:'Charles Leclerc'},{id:'oscar_piastri',name:'Oscar Piastri'},
+  {id:'carlos_sainz',name:'Carlos Sainz'},{id:'george_russell',name:'George Russell'},
+  {id:'lewis_hamilton',name:'Lewis Hamilton'},{id:'fernando_alonso',name:'Fernando Alonso'},
+  {id:'lance_stroll',name:'Lance Stroll'},{id:'pierre_gasly',name:'Pierre Gasly'},
+  {id:'esteban_ocon',name:'Esteban Ocon'},{id:'nico_hulkenberg',name:'Nico Hülkenberg'},
+  {id:'yuki_tsunoda',name:'Yuki Tsunoda'},{id:'alex_albon',name:'Alexander Albon'},
+  // Legends
+  {id:'sebastian_vettel',name:'Sebastian Vettel'},{id:'kimi_raikkonen',name:'Kimi Räikkönen'},
+  {id:'michael_schumacher',name:'Michael Schumacher'},{id:'ayrton_senna',name:'Ayrton Senna'},
+  {id:'alain_prost',name:'Alain Prost'},{id:'nico_rosberg',name:'Nico Rosberg'},
+  {id:'jenson_button',name:'Jenson Button'},{id:'rubens_barrichello',name:'Rubens Barrichello'},
+];
+
+async function loadDrivers() {
+  let drivers = FALLBACK_DRIVERS;
+  try {
+    const data = await get(`/api/standings/drivers?year=${YEAR}`);
+    if (data?.length) {
+      // Current grid first, then legends
+      const current = data.map(d=>({id:d.driver_id, name:d.name}));
+      const currentIds = new Set(current.map(d=>d.id));
+      const legends = FALLBACK_DRIVERS.filter(d=>!currentIds.has(d.id));
+      drivers = [...current, ...legends];
+    }
+  } catch(e){}
+
+  const d1s=el('d1-sel'), d2s=el('d2-sel');
+  d1s.innerHTML = drivers.map((d,i)=>`<option value="${d.id}" ${i==0?'selected':''}>${d.name}</option>`).join('');
+  d2s.innerHTML = drivers.map((d,i)=>`<option value="${d.id}" ${i==1?'selected':''}>${d.name}</option>`).join('');
+}
+
+// Year dropdowns
+const y1s=el('y1-sel'),y2s=el('y2-sel');
+for (let y=YEAR;y>=1950;y--) {
+  y1s.innerHTML+=`<option value="${y}" ${y==YEAR-1?'selected':''}>${y}</option>`;
+  y2s.innerHTML+=`<option value="${y}" ${y==YEAR?'selected':''}>${y}</option>`;
+}
+
+el('h2h-btn').onclick = async () => {
+  const d1=el('d1-sel').value, d2=el('d2-sel').value, n1=el('d1-sel').selectedOptions[0]?.text, n2=el('d2-sel').selectedOptions[0]?.text;
+  if (!d1||!d2) return;
+  if (d1===d2) { el('h2h-result').innerHTML='<div class="empty"><div class="icon">🤔</div>Kies twee verschillende coureurs</div>'; return; }
+  el('h2h-result').innerHTML='<div class="loading"><div class="spinner"></div> Carrièredata laden…</div>';
+  const data=await get(`/api/h2h?d1=${d1}&d2=${d2}`);
+  if (!data?.d1) { el('h2h-result').innerHTML='<div class="empty"><div class="icon">❌</div>Data niet beschikbaar voor deze combinatie. Probeer twee actieve coureurs of grote legendes.</div>'; return; }
+  renderH2H(data, n1, n2);
+};
+
+function renderH2H(data, n1, n2) {
+  const r1=data.d1, r2=data.d2;
+  const c1=teamColor(r1.team_id||''), c2=teamColor(r2.team_id||'');
+  const STATS=[
+    {lbl:'Grand Prix Starts',  v1:r1.races,   v2:r2.races,   big:false},
+    {lbl:'Race Overwinningen', v1:r1.wins,    v2:r2.wins,    big:true},
+    {lbl:'Podiums',            v1:r1.podiums, v2:r2.podiums, big:false},
+    {lbl:'Totaal Punten',      v1:r1.points,  v2:r2.points,  big:false},
+    {lbl:'Wereldtitels',       v1:r1.titles,  v2:r2.titles,  big:true},
+    {lbl:'Win Ratio', v1:r1.races?+(r1.wins/r1.races*100).toFixed(1):0, v2:r2.races?+(r2.wins/r2.races*100).toFixed(1):0, fmt:'%', big:false},
+    {lbl:'Pole Positions', v1:r1.poles||0, v2:r2.poles||0, big:false},
+  ];
+  el('h2h-result').innerHTML=`<div class="card">
+    <div style="display:grid;grid-template-columns:1fr 1fr;padding:1rem 1.5rem;border-bottom:1px solid var(--border);gap:1rem">
+      <div>
+        <div style="font-family:var(--font-display);font-size:1.5rem;font-weight:900;color:${c1}">${n1}</div>
+        ${r1.nationality?`<div style="font-size:0.72rem;color:var(--txt3)">${flagImg(r1.nationality,14)} ${r1.nationality}</div>`:''}
+      </div>
+      <div style="text-align:right">
+        <div style="font-family:var(--font-display);font-size:1.5rem;font-weight:900;color:${c2}">${n2}</div>
+        ${r2.nationality?`<div style="font-size:0.72rem;color:var(--txt3)">${r2.nationality} ${flagImg(r2.nationality,14)}</div>`:''}
+      </div>
+    </div>
+    <div style="padding:1rem 1.5rem">
+      ${STATS.map(s=>{
+        const total=Math.max(s.v1+s.v2,1);
+        const pct1=+(s.v1/total*100).toFixed(0), pct2=+(s.v2/total*100).toFixed(0);
+        const win=s.v1>s.v2?'left':s.v2>s.v1?'right':'tie';
+        const f=s.fmt||'';
+        return `<div class="stat-row">
+          <div style="text-align:right">
+            <div class="stat-val ${s.big?'big':''}" style="color:${win==='left'?c1:'var(--txt2)'}">${s.v1}${f}</div>
+          </div>
+          <div>
+            <div class="stat-lbl">${s.lbl}</div>
+            <div class="stat-bar-wrap">
+              <div style="display:flex;justify-content:flex-end"><div class="stat-bar" style="width:${pct1}%;background:${c1};border-radius:3px 0 0 3px"></div></div>
+              <div><div class="stat-bar" style="width:${pct2}%;background:${c2};border-radius:0 3px 3px 0"></div></div>
+            </div>
+          </div>
+          <div>
+            <div class="stat-val ${s.big?'big':''}" style="color:${win==='right'?c2:'var(--txt2)'}">${s.v2}${f}</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+el('sc-btn').onclick = async () => {
+  const y1=el('y1-sel').value, y2=el('y2-sel').value;
+  if (y1===y2) { el('sc-result').innerHTML='<div class="empty"><div class="icon">🤔</div>Kies twee verschillende jaren</div>'; return; }
+  el('sc-result').innerHTML='<div class="loading"><div class="spinner"></div> Seizoensdata laden (kan even duren)…</div>';
+  const data=await get(`/api/compare/seasons?y1=${y1}&y2=${y2}`);
+  if (!data?.s1) {
+    el('sc-result').innerHTML=`<div class="empty"><div class="icon">❌</div>Data niet beschikbaar.<br><small style="color:var(--txt3)">Seizoenen vóór ~1996 hebben mogelijk geen constructeursstanden. Probeer jaren ≥ 2000.</small></div>`;
+    return;
+  }
+  renderSeasons(data.s1, data.s2);
+};
+
+function seasonCol(s) {
+  const col=teamColor(s.team_id||'');
+  return `<div class="sc-col">
+    <div class="sc-yr">${s.year}<div style="font-size:0.72rem;font-weight:400;color:var(--txt3);margin-top:2px">${s.races} races</div></div>
+    <div class="sc-body">
+      <div style="margin-bottom:1rem">
+        <div class="section-label">👑 Rijderskampioen</div>
+        <div style="font-family:var(--font-display);font-size:1.4rem;font-weight:900;color:var(--gold)">${s.driver_champion||'—'}</div>
+        <div style="font-size:0.78rem;color:var(--txt3)">${s.driver_points} pts · ${s.driver_wins} wins</div>
+      </div>
+      <div style="margin-bottom:1.25rem">
+        <div class="section-label">🏗 Constructeurskampioen</div>
+        <div style="font-family:var(--font-display);font-size:1.2rem;font-weight:900;color:${col}">${s.team_champion||'—'}</div>
+        <div style="font-size:0.78rem;color:var(--txt3)">${s.team_points} pts</div>
+      </div>
+      <div class="section-label" style="margin-bottom:0.5rem">Top 10 Coureurs</div>
+      ${(s.drivers||[]).slice(0,10).map((d,i)=>{
+        const maxP=s.drivers[0]?.points||1, pct=+(d.points/maxP*100).toFixed(0);
+        const dc=teamColor(d.team_id), pc=i==0?'var(--gold)':i==1?'var(--silver)':i==2?'var(--bronze)':'var(--txt3)';
+        return `<div class="drv-bar-row">
+          <div style="font-family:var(--font-mono);font-size:0.68rem;font-weight:700;color:${pc};width:16px">${i+1}</div>
+          <div style="flex:1;height:17px;background:var(--bg4);border-radius:3px;overflow:hidden">
+            <div style="width:${pct}%;height:100%;background:${dc};display:flex;align-items:center;padding-left:5px">
+              <span style="font-size:0.62rem;font-weight:700;color:#fff;white-space:nowrap">${d.name.split(' ').pop()}</span>
+            </div>
+          </div>
+          <div style="font-family:var(--font-mono);font-size:0.68rem;color:var(--txt3);width:28px;text-align:right">${d.points}</div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+function renderSeasons(s1,s2) {
+  el('sc-result').innerHTML=`<div class="grid-2">${seasonCol(s1)}${seasonCol(s2)}</div>`;
+}
+
+loadDrivers();
+</script>
+</body>
+</html>

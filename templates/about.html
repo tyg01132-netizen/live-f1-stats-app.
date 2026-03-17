@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Over F1</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .fact-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:1rem; margin-bottom:2rem; }
+    .fact-card { background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:1.25rem; display:flex; gap:1rem; align-items:flex-start; transition:border-color 0.2s; }
+    .fact-card:hover { border-color:var(--red); }
+    .fact-icon { font-size:1.6rem; flex-shrink:0; margin-top:2px; }
+    .fact-title { font-size:0.82rem; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--red); margin-bottom:0.3rem; }
+    .fact-body { font-size:0.87rem; color:var(--text-muted); line-height:1.6; }
+    .api-box { background:rgba(0,210,190,0.05); border:1px solid rgba(0,210,190,0.2); border-radius:8px; padding:1.25rem 1.5rem; margin-bottom:1.5rem; }
+    .api-box .api-title { font-weight:700; color:#27F4D2; margin-bottom:0.6rem; }
+    .api-row { display:flex; justify-content:space-between; align-items:flex-start; padding:0.4rem 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:0.85rem; gap:1rem; }
+    .api-row:last-child { border-bottom:none; }
+    .api-name { font-weight:600; flex-shrink:0; }
+    .api-desc { color:var(--text-muted); text-align:right; }
+    .points-table { width:100%; border-collapse:collapse; }
+    .points-table td, .points-table th { padding:0.4rem 0.75rem; font-size:0.85rem; }
+    .timeline { position:relative; padding-left:2rem; }
+    .timeline::before { content:''; position:absolute; left:6px; top:4px; bottom:4px; width:2px; background:var(--border); }
+    .tl-item { position:relative; margin-bottom:1.2rem; }
+    .tl-dot { position:absolute; left:-1.75rem; top:3px; width:10px; height:10px; border-radius:50%; background:var(--red); }
+    .tl-year { font-size:0.72rem; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--red); }
+    .tl-text { font-size:0.87rem; color:var(--text-muted); line-height:1.5; margin-top:1px; }
+  </style>
+</head>
+<body>
+<nav>
+  <a class="nav-logo" href="/"><span class="f1-badge">F1</span> Dashboard</a>
+  <ul class="nav-links">
+    <li><a href="/">Home</a></li><li><a href="/calendar">Kalender</a></li>
+    <li><a href="/drivers">Coureurs</a></li><li><a href="/live">Live</a></li>
+    <li><a href="/about" class="active">Over F1</a></li>
+  </ul>
+  <div class="nav-right"><select id="year-dropdown" class="year-select"></select></div>
+</nav>
+<main>
+<div class="driver-hero">
+  <div style="max-width:1280px;margin:0 auto;">
+    <div style="font-size:0.72rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--red);margin-bottom:0.4rem">INFO</div>
+    <div class="driver-hero-name">Over Formule 1</div>
+    <div class="driver-hero-team">Alles wat je wil weten over de koningsklasse van de autosport</div>
+  </div>
+</div>
+<div class="container">
+
+  <!-- DATA INFO BOX -->
+  <div class="section-title">📡 Waar komt de data vandaan?</div>
+  <div class="api-box">
+    <div class="api-title">Dit dashboard gebruikt twee gratis, publieke APIs:</div>
+    <div class="api-row">
+      <span class="api-name">Jolpica API</span>
+      <span class="api-desc">Opvolger van de Ergast API. Historische F1 data: resultaten, standen, kwalificatie, pitstops. Update op <strong>maandag na elk race weekend</strong> — daarvoor kan nieuwe data ontbreken.</span>
+    </div>
+    <div class="api-row">
+      <span class="api-name">OpenF1 API</span>
+      <span class="api-desc">Live data tijdens sessies: posities elke ~4 seconden, intervallen, rondetijden, bandinfo, race control berichten. Beschikbaar vanaf seizoen 2023.</span>
+    </div>
+    <div class="api-row">
+      <span class="api-name">Kwalificatie & pitstops</span>
+      <span class="api-desc">Jolpica voegt pitstop- en kwalificatiedata soms pas dagen later toe. Als een tab leeg is, komt de data er vanzelf bij.</span>
+    </div>
+    <div class="api-row">
+      <span class="api-name">Live pagina</span>
+      <span class="api-desc">Toont alleen data tijdens actieve race- of kwalificatiesessies. Buiten events zie je de countdown naar het volgende evenement.</span>
+    </div>
+  </div>
+
+  <!-- 20 FEITEN -->
+  <div class="section-title">🏎️ 20 Toffe F1 feiten</div>
+  <div class="fact-grid">
+    <div class="fact-card"><div class="fact-icon">🔊</div><div><div class="fact-title">Geluidsdruk</div><div class="fact-body">Een F1-motor uit het V8-tijdperk bereikte 160 decibel — harder dan een startende straaljager van dichtbij.</div></div></div>
+    <div class="fact-card"><div class="fact-icon">🌀</div><div><div class="fact-title">Downforce</div><div class="fact-body">Een moderne F1-auto genereert zoveel neerwaartse kracht dat hij theoretisch ondersteboven aan een tunnel zou kunnen rijden bij 160 km/u.</div></div></div>
+    <div class="fact-card"><div class="fact-icon">🏁</div><div><div class="fact-title">Remhitte</div><div class="fact-body">F1-remmen worden roder dan 1.000°C — warm genoeg om staal te laten smelten.</div></div></div>
+    <div class="fact-card"><div class="fact-icon">💨</div><div><div class="fact-title">Topsnelheid</div><div class="fact-body">Het officieuze F1-topsnelheidsrecord is 372,6 km/u, gereden door Valtteri Bottas in Monza in 2016.</div></div></div>
+    <div class="fact-card"><div class="fact-icon">⚖️</div><div><div class="fact-title">Gewichtsverlies coureur</div><div class="fact-body">Coureurs verliezen tijdens een race tot 4 kilo aan vocht. De cockpit kan oplopen tot 50°C.</div></div></div>
+    <div class="fact-card"><div class="fact-icon">🔩</div><div><div class="fact-title">Pitstop record</div><div class="fact-body">Red Bull Racing zette in 2023 het wereldrecord pitstop: 1,82 seconden. Twintig monteurs wisselen vier banden tegelijk.</div></div></div>
+    <div class="fact-card"><div class="fact-icon">💰</div><div><div class="fact-title">Stuur prijs</div><div class="fact-body">Een F1-stuur kost tussen de €40.000 en €100.000 en bevat tot 25 knoppen, wiggels en rotary switches.</div></div></div>
+    <div class="fact-card"><div class="fact-icon">🧠</div><div><div class="fact-title">G-krachten</div><div class="fact-body">Bij remmen ervaren coureurs tot 6G — zes keer hun eigen lichaamsgewicht duwt hen naar voren.</div></div></div>
+    <div class="fact-card"><div class="fact-icon">🫀</div><div><div class="fact-title">Hartslag</div><div class="fact-body">Tijdens een race kan de hartslag van een coureur oplopen tot 170-190 slagen per minuut — vergelijkbaar met een sprinter.</div></div></div>
+    <div class="fact-card"><div class="fact-icon">⛽</div><div><div class="fact-title">Brandstof</div><div class="fact-body">Vanaf 2026 rijdt F1 op 100% duurzame synthetische brandstof. Een tank weegt bij de start zo'n 110 kg.</div></div></div>
+    <div class="fact-card"><div class="fact-icon">🏆</div><div><div class="fact-title">Meeste titels</div><div class="fact-body">Lewis Hamilton en Michael Schumacher delen het record met elk 7 wereldtitels.</div></div></div>
+    <div class="fact-card"><div class="fact-icon">🇺🇸</div><div><div class="fact-title">Cadillac in F1</div><div class="fact-body">In 2026 maakte Cadillac zijn F1-debuut als het eerste nieuwe team in meer dan een decennium — het 11e team op de grid.</div></div></div>
+    <div class="fact-card"><div class="fact-icon">🔋</div><div><div class="fact-title">Hybride power</div><div class="fact-body">De huidige F1-power unit levert meer dan 1.000 pk. Zo'n 160 pk komt van het elektrische MGU-K systeem.</div></div></div>
+    <div class="fact-card"><div class="fact-icon">📺</div><div><div class="fact-title">Bereik</div><div class="fact-body">F1 heeft meer dan 1,5 miljard kijkers wereldwijd. De populariteit is de afgelopen jaren explosief gegroeid, mede door Drive to Survive.</div></div></div>
+    <div class="fact-card"><div class="fact-icon">🌍</div><div><div class="fact-title">Meeste GP-winnen</div><div class="fact-body">Lewis Hamilton won de meeste Grand Prix races ooit: 103 overwinningen tot nu toe.</div></div></div>
+    <div class="fact-card"><div class="fact-icon">🚀</div><div><div class="fact-title">0-100 km/u</div><div class="fact-body">Een F1-auto accelereert van 0 naar 100 km/u in minder dan 2,6 seconden. Van 0 naar 300 en terug naar 0 duurt nog geen 10 seconden.</div></div></div>
+    <div class="fact-card"><div class="fact-icon">🌬️</div><div><div class="fact-title">Actieve aero 2026</div><div class="fact-body">Vanaf 2026 heeft F1 geen DRS meer. In plaats daarvan gebruikt elke auto actieve aerodynamica die automatisch omschakelt in "Overtake Mode".</div></div></div>
+    <div class="fact-card"><div class="fact-icon">🏎️</div><div><div class="fact-title">Senna's Monaco record</div><div class="fact-body">Ayrton Senna won de Monaco Grand Prix een recordaantal van 6 keer — een prestatie die tot op heden niet is evenaard.</div></div></div>
+    <div class="fact-card"><div class="fact-icon">📡</div><div><div class="fact-title">Data per ronde</div><div class="fact-body">Een moderne F1-auto stuurt meer dan 300 parameters live door naar de pitwall. Per rijdag gaat het om tientallen gigabytes aan sensordata.</div></div></div>
+    <div class="fact-card"><div class="fact-icon">🎯</div><div><div class="fact-title">Pitstop precisie</div><div class="fact-body">De wielmoer op een F1-auto heeft slechts één draai nodig om vast te zitten. De pneumatische wielmoersleutel draait op 10.000 toeren per minuut.</div></div></div>
+  </div>
+
+  <!-- PUNTENSYSTEEM -->
+  <div class="section-title">🏅 Puntensysteem 2026</div>
+  <div class="card" style="margin-bottom:2rem;">
+    <div class="card-body">
+      <table class="points-table">
+        <thead><tr><th>Positie</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>Snelste ronde</th></tr></thead>
+        <tbody><tr><td style="font-weight:700;color:var(--text-muted)">Punten</td><td style="color:#FFD700;font-weight:700">25</td><td style="color:#C0C0C0;font-weight:700">18</td><td style="color:#CD7F32;font-weight:700">15</td><td>12</td><td>10</td><td>8</td><td>6</td><td>4</td><td>2</td><td>1</td><td style="color:var(--green)">1 (top 10)</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TIJDLIJN -->
+  <div class="section-title">📅 F1 tijdlijn</div>
+  <div class="card" style="margin-bottom:2rem;">
+    <div class="card-body">
+      <div class="timeline">
+        <div class="tl-item"><div class="tl-dot"></div><div class="tl-year">1950</div><div class="tl-text">Eerste officiële F1 Wereldkampioenschap op Silverstone. Giuseppe Farina wordt de eerste kampioen.</div></div>
+        <div class="tl-item"><div class="tl-dot"></div><div class="tl-year">1958</div><div class="tl-text">Constructeurskampioenschap geïntroduceerd. Vanwall wint als eerste.</div></div>
+        <div class="tl-item"><div class="tl-dot"></div><div class="tl-year">1968</div><div class="tl-text">Sponsoring en kleurrijke livery's doen hun intrede. Vaarwel racing green, hallo Lotus in goud-zwart.</div></div>
+        <div class="tl-item"><div class="tl-dot"></div><div class="tl-year">1994</div><div class="tl-text">Tragisch seizoen: Ayrton Senna overlijdt op Imola. Enorme veiligheidsrevolutie volgt in de jaren daarna.</div></div>
+        <div class="tl-item"><div class="tl-dot"></div><div class="tl-year">2000</div><div class="tl-text">Michael Schumacher begint aan zijn periode van dominantie. Vijf opeenvolgende titels met Ferrari.</div></div>
+        <div class="tl-item"><div class="tl-dot"></div><div class="tl-year">2008</div><div class="tl-text">Lewis Hamilton wint zijn eerste titel op de allerlaatste bocht van de laatste race. Een van de meest dramatische finales ooit.</div></div>
+        <div class="tl-item"><div class="tl-dot"></div><div class="tl-year">2014</div><div class="tl-text">Hybride turbo-era begint. Mercedes domineert jarenlang met het nieuwe power unit-tijdperk.</div></div>
+        <div class="tl-item"><div class="tl-dot"></div><div class="tl-year">2021</div><div class="tl-text">Max Verstappen wint zijn eerste titel in Abu Dhabi. Het meest controversiële seizoenseinde in jaren.</div></div>
+        <div class="tl-item"><div class="tl-dot"></div><div class="tl-year">2023</div><div class="tl-text">Verstappen wint 19 van de 22 races — het meest dominante seizoen in F1-geschiedenis.</div></div>
+        <div class="tl-item"><div class="tl-dot"></div><div class="tl-year">2026</div><div class="tl-text">Nieuwe motorreglementen, actieve aero, 100% duurzame brandstof en Cadillac als nieuw 11e team. Een nieuw tijdperk begint.</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</main>
+<script src="/static/helpers.js"></script>
+<script src="/static/nav.js"></script>
+<script>initNav(2026, 2000, 2026);</script>
+</body>
+</html>

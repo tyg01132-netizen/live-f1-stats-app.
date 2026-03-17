@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Archief — F1FORLIVE</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    .season-desc { background:linear-gradient(135deg,rgba(225,6,0,0.08),var(--bg2));border:1px solid rgba(225,6,0,0.2);border-radius:var(--r2);padding:1.25rem 1.5rem;margin-bottom:1.5rem;position:relative;overflow:hidden; }
+    .season-desc::before { content:attr(data-year);position:absolute;right:1rem;top:50%;transform:translateY(-50%);font-family:var(--font-display);font-size:6rem;font-weight:900;color:rgba(225,6,0,0.06);line-height:1;pointer-events:none; }
+    .sd-label { font-family:var(--font-display);font-size:0.6rem;font-weight:900;letter-spacing:3px;text-transform:uppercase;color:var(--red);margin-bottom:0.35rem; }
+    .sd-title { font-family:var(--font-display);font-size:1.6rem;font-weight:900;margin-bottom:0.5rem; }
+    .sd-text  { font-size:0.85rem;color:var(--txt2);line-height:1.75;max-width:700px; }
+    .sd-tags  { margin-top:0.75rem;display:flex;gap:0.4rem;flex-wrap:wrap; }
+    .sd-tag   { background:var(--bg4);color:var(--txt3);font-size:0.62rem;font-weight:700;padding:3px 8px;border-radius:3px; }
+    .sd-tag-red { background:rgba(225,6,0,0.15);color:var(--red);border:1px solid rgba(225,6,0,0.2); }
+    .race-result-mini { display:flex;align-items:center;gap:0.6rem;padding:0.45rem 0;border-bottom:1px solid rgba(255,255,255,0.03);cursor:pointer;transition:background 0.1s; }
+    .race-result-mini:hover { background:rgba(255,255,255,0.02);border-radius:var(--r); }
+    .rrm-pos { font-family:var(--font-display);font-size:1rem;font-weight:900;width:22px;flex-shrink:0; }
+  </style>
+</head>
+<body>
+<nav class="topnav">
+  <a class="nav-logo" href="/" style="display:flex;align-items:center;gap:8px">
+    <svg width="26" height="26" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="13" fill="#e10600"/><path d="M7 14h14M14 7v14" stroke="white" stroke-width="2.5" stroke-linecap="round"/><circle cx="14" cy="14" r="3" fill="white"/></svg>
+    <span style="font-family:var(--font-display);font-size:1.25rem;font-weight:900;letter-spacing:-0.5px">F1<span style="color:var(--red)">FOR</span>LIVE</span>
+  </a>
+  <ul class="nav-links" id="nav-links">
+    <li><a href="/">Home</a></li><li><a href="/stats">Stats 2026</a></li>
+    <li><a href="/calendar">Kalender</a></li><li><a href="/live">Live</a></li>
+    <li><a href="/compare">Vergelijk</a></li><li><a href="/map">Kaart</a></li>
+    <li><a href="/predictor">Prognose</a></li><li><a href="/timeline">Tijdlijn</a></li>
+    <li><a href="/f2">F2</a></li><li><a href="/history" class="active">Archief</a></li>
+    <li><a href="/info">Info</a></li>
+  </ul>
+  <div class="live-pill"><div class="live-dot"></div><span>Live</span></div>
+  <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+</nav>
+<script>
+(function(){
+  var h=document.getElementById('nav-hamburger'),n=document.getElementById('nav-links');
+  if(h)h.addEventListener('click',function(){h.classList.toggle('open');n.classList.toggle('open');});
+  document.querySelectorAll('.nav-links a').forEach(function(a){a.addEventListener('click',function(){h&&h.classList.remove('open');n&&n.classList.remove('open');});});
+})();
+</script>
+
+<div class="page">
+  <div class="page-title">Seizoensarchief</div>
+  <div class="page-sub">Elk F1-seizoen van 1950 t/m 2026 — resultaten, kampioenen, verhalen</div>
+
+  <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;flex-wrap:wrap">
+    <select id="year-sel" class="input" style="width:110px;font-size:1rem;font-weight:700"></select>
+    <button class="btn btn-red" id="load-btn">Laden →</button>
+  </div>
+
+  <div style="margin-bottom:0.6rem">
+    <div class="section-label" style="margin-bottom:0.4rem">Recent</div>
+    <div style="display:flex;gap:0.4rem;flex-wrap:wrap" id="recent-btns"></div>
+  </div>
+  <div style="margin-bottom:1.75rem">
+    <div class="section-label" style="margin-bottom:0.4rem">Iconische seizoenen</div>
+    <div style="display:flex;gap:0.4rem;flex-wrap:wrap" id="iconic-btns"></div>
+  </div>
+
+  <div id="content"><div class="empty"><div class="icon">🏆</div>Selecteer een jaar hierboven</div></div>
+</div>
+
+<script src="/static/app.js"></script>
+<script>
+const MIN = {{ min_year }}, MAX = {{ max_year }};
+
+const SEASON_STORIES = {
+  2026: { title:"Nieuw Tijdperk — 2026", tags:["Nieuw motorreglement","Cadillac 11e team","Audi/Sauber","50/50 hybride","Huidig seizoen"], text:"Het grote reset-jaar. Volledig nieuw power unit reglement: 50/50 split verbrandingsmotor en elektrisch vermogen, geen MGU-H meer. Cadillac betreedt de sport als 11e team. Audi neemt Sauber definitief over. Wie beheerst het nieuwe tijdperk?" },
+  2025: { title:"Het Meest Competitieve Grid in Jaren", tags:["4 teams gelijkwaardig","McLaren opkomst","Ferrari challenge","Red Bull worstelt"], text:"McLaren, Ferrari, Mercedes en Red Bull strijden gelijkwaardig. Het eerste seizoen in jaren zonder duidelijke dominante auto — elke race open voor meerdere teams." },
+  2024: { title:"Verstappen Vierde — McLaren Opkomst", tags:["Verstappen 4e titel","McLaren opkomst","Ferrari challenge","Red Bull worstelt H2"], text:"Vier titels op rij voor Verstappen — evenaart Vettel en Prost. Maar McLaren en Ferrari worden na de zomerstop serieuze uitdagers. Norris wint zijn eerste GP. Het begin van het einde van Red Bull-dominantie?" },
+  2023: { title:"19 Overwinningen — Absoluut Record", champ:"Max Verstappen", team:"Red Bull", tags:["19/22 overwinningen","Absoluut record","RB19","Vroegste titelverovering"], text:"Negentien overwinningen in 22 races — nooit eerder vertoond. De RB19 is vermoedelijk de beste F1-auto ooit gebouwd. Verstappen breekt elk record. De enige spanning is intern: Perez versus Verstappen." },
+  2022: { title:"Verstappen Heerst met Nieuw Reglement", champ:"Max Verstappen", team:"Red Bull", tags:["15 overwinningen","Ground effect terug","Ferrari-strategiefouten","RB18"], text:"Volledig nieuwe auto's met ground-effect aerodynamica. Ferrari begint sterk maar implodeert door strategiefouten. Red Bull en Verstappen nemen het over en winnen 15 races." },
+  2021: { title:"Het Seizoen van het Decennium", champ:"Max Verstappen", team:"Red Bull", tags:["Gelijkstand punten","Laatste ronde Abu Dhabi","Masi controverse","23 races"], text:"Nergens in de sport is een seizoen zo dramatisch geëindigd. Verstappen en Hamilton streden tot de allerlaatste ronde van de allerlaatste race — gelijkstand op punten. Safety car, herstart, Verstappen passeert Hamilton. Een avond die F1 voor altijd verdeelde." },
+  2020: { title:"Hamilton's Zevende — Corona-seizoen", champ:"Lewis Hamilton", team:"Mercedes", tags:["Covid-19","Zonder publiek","7e titel","Schumacher record geëvenaard"], text:"F1 vecht terug tegen de pandemie met een ingekrompen seizoen zonder fans. Hamilton evenaart Schumacher's zeven wereldtitels. Een historisch jaar in bizarre omstandigheden." },
+  2019: { title:"Hamilton Domineert — Ferrari Vecht Terug", champ:"Lewis Hamilton", team:"Mercedes", tags:["6e titel Hamilton","Mercedes 6e op rij","Leclerc debuut","Vettel-Hamilton duel"], text:"Mercedes wint opnieuw alles. Maar Leclerc debuteert voor Ferrari en wint in Spa en Monza. Hamilton pakt zijn zesde titel. Een generatiewisseling kondigt zich aan." },
+  2018: { title:"Hamilton vs Vettel — De Laatste Echte Strijd", champ:"Lewis Hamilton", team:"Mercedes", tags:["Hamilton vs Vettel","Ferrari competitief","Vettel fouten","5e titel Hamilton"], text:"Ferrari is echt competitief voor het eerst in jaren. Vettel leidt het kampioenschap maar begint fouten te maken — Hockenheim in de regen, Monza. Hamilton is genadenloos. Vijfde titel." },
+  2016: { title:"De Mercedes Burgeroorlog", champ:"Nico Rosberg", team:"Mercedes", tags:["Hamilton vs Rosberg","Barcelona botsing","Rosberg pensioen 5 dagen later","21 races"], text:"Hamilton vs. Rosberg bereikt absolute climax. Barcelona: ze botsen op lap 1. Rosberg wint het kampioenschap in Abu Dhabi — en kondigt vijf dagen later zijn pensioen aan. Totale verbazing." },
+  2012: { title:"Zeven Coureurs, Eén Kampioen", champ:"Sebastian Vettel", team:"Red Bull", tags:["7 winnaars in 7 races","Brazilië-thriller","Vettel comeback","Meest open seizoen"], text:"Zeven verschillende coureurs winnen de eerste zeven races. De meest open competitie in decennia. Vettel verliest in Brazilië bijna alles — maar overleeft. Zijn derde achtereenvolgende titel." },
+  2009: { title:"Het Brawn GP-Sprookje", champ:"Jenson Button", team:"Brawn GP", tags:["Cinderella-verhaal","Double diffuser","Honda exit","Brawn GP"], text:"Honda trekt zich terug. Ross Brawn koopt het team voor een pond. Met een geheime double-diffuser domineert Brawn GP de eerste helft. Button wint zes van de eerste zeven races. Onmogelijk — en toch." },
+  2008: { title:"De Laatste Bocht van Brazilië", champ:"Lewis Hamilton", team:"McLaren", tags:["1 punt verschil","Hamilton 1e titel","Massa-tragedie","Glock"], text:"Massa leidt de race in Interlagos, zijn teamgenoten jubelen al. Dan haalt Hamilton Glock in op de allerlaatste bocht — P5, één punt genoeg. Hamilton is kampioen. Hartverscheurend voor Massa." },
+  2007: { title:"Räikkönen Steelt de Titel", champ:"Kimi Räikkönen", team:"Ferrari", tags:["1 punt marge","Hamilton-implosie","McLaren-spionageschandaal","Räikkönen"], text:"Hamilton leidt met 17 punten en twee races te gaan. Dan implodeert McLaren. Räikkönen wint de laatste twee races en de titel met één punt. Het meest dramatische seizoenseinde tot 2021." },
+  2004: { title:"Schumi en Ferrari Onverslaanbaar", champ:"Michael Schumacher", team:"Ferrari", tags:["5 titels op rij","F2004","13 overwinningen","Ferrari gouden era"], text:"Vijf titels op rij. De F2004 is de meest dominante auto van die generatie. Schumacher wint de eerste vijf races. Barrichello is de perfecte teamgenoot. Een era die niemand ooit vergeet." },
+  2000: { title:"Ferrari's 21-Jarige Wacht Voorbij", champ:"Michael Schumacher", team:"Ferrari", tags:["Ferrari 21 jaar gewacht","Schumacher tranen Japan","Begin dynasty"], text:"Na 21 jaar verlost Schumacher Ferrari van hun kampioenschap-droogte. Hij weent op de grid in Japan. Het signaal van een dynasty die nog vier titels op rij gaat opleveren." },
+  1994: { title:"Het Zwartste Weekend", champ:"Michael Schumacher", team:"Benetton", tags:["Senna-overlijden","Ratzenberger","San Marino GP","Veiligheidsrevolutie"], text:"San Marino Grand Prix 1994. Ratzenberger sterft zaterdag, Senna zondag bij Tamburello. F1 verandert voor altijd. Max Mosley hervormt veiligheidsstandaarden volledig. Nooit vergeten." },
+  1988: { title:"Senna vs Prost — 15 van 16 Races", champ:"Ayrton Senna", team:"McLaren", tags:["15/16 overwinningen","Senna vs Prost","McLaren-Honda","Perfecte rivaliteit"], text:"McLaren-Honda wint 15 van de 16 races. Senna en Prost zijn teamgenoten en aartsrivalen. Het begin van de meest intense twee-coureur rivaliteit in de sport. Senna wint zijn eerste titel." },
+  1984: { title:"Half Punt — Nauwste Ooit", champ:"Niki Lauda", team:"McLaren", tags:["0.5 punt marge","Lauda 3e titel","Prost vs Lauda","Monaco afgevlagd"], text:"Niki Lauda wint zijn derde titel met exact een halve punt voorsprong op Prost. Beide rijden voor McLaren. Monaco-race afgevlagd in de regen — Prost had anders gewonnen." },
+  1976: { title:"RUSH — Lauda vs Hunt", champ:"James Hunt", team:"McLaren", tags:["Lauda-crash Nürburgring","Rush-film","Japan-regen finale","1 punt"], text:"Lauda overleeft zijn brandende crash op de Nürburgring, mist twee races, keert terug en bijna wint het kampioenschap. Hunt wint de laatste race in Japan in de stromende regen. Lauda stapt uit." },
+  1950: { title:"De Geboorte van een Sport", champ:"Giuseppe Farina", team:"Alfa Romeo", tags:["Eerste F1-seizoen","Silverstone 1950","King George VI","Alfa Romeo dominantie"], text:"Silverstone, 13 mei 1950. King George VI staat op de tribune. De allereerste officiële Formula 1 Grand Prix rijdt weg. Farina wint het eerste wereldkampioenschap. Vijfenzeventig jaar later is het de rijkste sport ter wereld." },
+};
+
+// Build year selector
+const sel = el('year-sel');
+for (let y = MAX; y >= MIN; y--) {
+  const opt = document.createElement('option');
+  opt.value = y; opt.textContent = y; sel.appendChild(opt);
+}
+sel.value = MAX;
+
+// Recent buttons
+const recentWrap = el('recent-btns');
+for (let y = MAX; y >= Math.max(MIN, MAX-5); y--) {
+  const b = document.createElement('button');
+  b.className = 'btn' + (y===MAX?' btn-red':'');
+  b.textContent = y;
+  b.onclick = () => { sel.value=y; loadYear(y); };
+  recentWrap.appendChild(b);
+}
+
+// Iconic buttons
+const ICONIC = [2024,2023,2021,2016,2012,2009,2008,2004,2000,1994,1988,1984,1976,1950];
+el('iconic-btns').innerHTML = ICONIC.filter(y=>y<=MAX).map(y=>
+  `<button class="btn" onclick="document.getElementById('year-sel').value=${y};loadYear(${y})">${y}</button>`
+).join('');
+
+el('load-btn').onclick = () => loadYear(parseInt(sel.value));
+
+const urlYear = parseInt(new URLSearchParams(location.search).get('y'));
+loadYear((urlYear>=MIN && urlYear<=MAX) ? (sel.value=urlYear, urlYear) : MAX);
+
+async function loadYear(year) {
+  history.replaceState({},'',' /history?y='+year);
+  el('content').innerHTML = '<div class="loading"><div class="spinner"></div> Seizoen '+year+' laden...</div>';
+  const data = await get('/api/history/season?year='+year);
+  if (!data?.year) { el('content').innerHTML='<div class="empty"><div class="icon">❌</div>Laden mislukt</div>'; return; }
+
+  const { races, driver_standings:ds, constructor_standings:cs } = data;
+  const story = SEASON_STORIES[year];
+  const champ   = ds[0]  ? `<span style="color:var(--gold)">👑 ${ds[0].name}</span>` : '—';
+  const conChamp = cs[0] ? `<span style="color:${teamColor(cs[0].team_id)}">🏆 ${cs[0].name}</span>` : '—';
+  const maxPts  = ds[0]?.points||1;
+
+  const storyHTML = story ? `
+    <div class="season-desc" data-year="${year}">
+      <div class="sd-label">📖 Seizoensverhaal</div>
+      <div class="sd-title">${story.title}</div>
+      <div class="sd-text">${story.text}</div>
+      <div class="sd-tags">
+        ${story.tags.map(t=>`<span class="sd-tag">${t}</span>`).join('')}
+        ${story.champ ? `<span class="sd-tag sd-tag-red">👑 ${story.champ} — ${story.team}</span>` : ''}
+      </div>
+    </div>` : '';
+
+  // Driver standings bars
+  const barsHTML = ds.slice(0,10).map(d=>{
+    const pct=(d.points/maxPts*100).toFixed(1), col=teamColor(d.team_id);
+    return `<div class="pts-bar-row">
+      <div class="pts-bar-name">${flagImg(d.nationality,14)} ${d.name}</div>
+      <div class="pts-bar-track"><div class="pts-bar-fill" style="width:${pct}%;background:${col}"><span class="pts-bar-val">${d.points}</span></div></div>
+    </div>`;
+  }).join('');
+
+  const drvTable = ds.length ? `
+    <div class="pts-bar-wrap" style="margin-bottom:1rem">${barsHTML}</div>
+    <table class="f1-table"><thead><tr><th>Pos</th><th>Coureur</th><th>Team</th><th>Nat.</th><th>Pts</th><th>Wins</th></tr></thead>
+    <tbody>${ds.map(d=>{
+      const p=d.position;const pc=p==1?'var(--gold)':p==2?'var(--silver)':p==3?'var(--bronze)':'var(--txt3)';
+      return `<tr><td class="pos" style="color:${pc}">${p}</td>
+        <td><div class="driver-cell"><div class="team-bar" style="background:${teamColor(d.team_id)}"></div><div class="driver-name">${d.name}</div></div></td>
+        <td style="font-size:0.75rem;color:var(--txt3)">${d.team}</td>
+        <td>${flagImg(d.nationality,14)}</td>
+        <td class="pts">${d.points}</td><td style="color:${d.wins>0?'var(--gold)':'var(--txt3)'}">${d.wins}</td></tr>`;
+    }).join('')}</tbody></table>` : '<div class="empty"><div class="icon">📊</div>Geen data</div>';
+
+  const maxConPts=cs[0]?.points||1;
+  const conBars = cs.slice(0,10).map(c=>{
+    const pct=(c.points/maxConPts*100).toFixed(1),col=teamColor(c.team_id);
+    return `<div class="pts-bar-row">
+      <div class="pts-bar-name">${c.name}</div>
+      <div class="pts-bar-track"><div class="pts-bar-fill" style="width:${pct}%;background:${col}"><span class="pts-bar-val">${c.points}</span></div></div>
+    </div>`;
+  }).join('');
+
+  const conTable = cs.length ? `
+    <div class="pts-bar-wrap" style="margin-bottom:1rem">${conBars}</div>
+    <table class="f1-table"><thead><tr><th>Pos</th><th>Team</th><th>Nat.</th><th>Pts</th><th>Wins</th></tr></thead>
+    <tbody>${cs.map(c=>{
+      const p=c.position;const pc=p==1?'var(--gold)':p==2?'var(--silver)':p==3?'var(--bronze)':'var(--txt3)';
+      return `<tr><td class="pos" style="color:${pc}">${p}</td>
+        <td><div class="driver-cell"><div class="team-bar" style="background:${teamColor(c.team_id)}"></div><div class="driver-name">${c.name}</div></div></td>
+        <td>${flagImg(c.nationality,14)}</td>
+        <td class="pts">${c.points}</td><td style="color:${c.wins>0?'var(--gold)':'var(--txt3)'}">${c.wins}</td></tr>`;
+    }).join('')}</tbody></table>` : '<div class="empty"><div class="icon">📊</div>Geen data</div>';
+
+  // Races tab — including results for past races
+  const raceList = races.length ? races.map(r=>`
+    <a class="cal-row ${r.past?'past':''}" href="/race/${r.year}/${r.round}" style="text-decoration:none;color:inherit">
+      <div class="cal-rnd">R<span>${r.round}</span></div>
+      <div class="cal-stripe ${r.past?'done':'upcoming'}"></div>
+      <div class="cal-info">
+        <div class="cal-name">${flagImg(r.country,16)} ${r.name}</div>
+        <div class="cal-meta"><span>${r.circuit}</span><span>${r.locality}</span></div>
+      </div>
+      <div class="cal-right">
+        <div class="cal-date">${fmtDate(r.date)}</div>
+        <div class="cal-done">${r.past?'Uitslag bekijken →':'Aankomend'}</div>
+      </div>
+    </a>`).join('') : '<div class="empty"><div class="icon">📅</div>Geen races</div>';
+
+  el('content').innerHTML = `
+    <div style="margin-bottom:1.25rem">
+      <div class="page-title">Seizoen ${year}</div>
+      <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-top:0.35rem;font-size:0.85rem;color:var(--txt2)">
+        <span>Rijderskampioen: ${champ}</span>
+        <span>Constructeurskampioen: ${conChamp}</span>
+      </div>
+    </div>
+
+    <div class="stat-row" style="margin-bottom:1.25rem">
+      <div class="stat-chip"><div class="stat-num" style="color:var(--red)">${races.length}</div><div class="stat-lbl">Races</div></div>
+      <div class="stat-chip"><div class="stat-num">${ds.length}</div><div class="stat-lbl">Coureurs</div></div>
+      <div class="stat-chip"><div class="stat-num" style="color:var(--green)">${cs.length}</div><div class="stat-lbl">Teams</div></div>
+      ${ds[0]?`<div class="stat-chip"><div class="stat-num" style="color:var(--gold)">${ds[0].points}</div><div class="stat-lbl">Pts kampioen</div></div>`:''}
+      ${ds[0]?`<div class="stat-chip"><div class="stat-num">${ds[0].wins}</div><div class="stat-lbl">Wins</div></div>`:''}
+    </div>
+
+    ${storyHTML}
+
+    <div class="tab-root">
+      <div class="tabs" id="hist-inner-tabs">
+        <button class="tab-btn active" data-tab="ht-drivers">Rijders</button>
+        <button class="tab-btn" data-tab="ht-cons">Constructeurs</button>
+        <button class="tab-btn" data-tab="ht-races">Races ${races.filter(r=>r.past).length>0?'('+races.filter(r=>r.past).length+' gespeeld)':''}</button>
+      </div>
+      <div class="tab-pane active" id="ht-drivers"><div class="card">${drvTable}</div></div>
+      <div class="tab-pane" id="ht-cons"><div class="card">${conTable}</div></div>
+      <div class="tab-pane" id="ht-races"><div class="cal-list">${raceList}</div></div>
+    </div>`;
+
+  initTabsIn(el('content'));
+}
+</script>
+</body>
+</html>
