@@ -268,3 +268,40 @@ function animateNumber(el, target, duration = 800, suffix = '') {
   requestAnimationFrame(step);
 }
 window.animateNumber = animateNumber;
+
+// ── Dark / Light mode toggle ──────────────────────────────────────────────────
+(function() {
+  // Detect system preference
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+  const saved = localStorage.getItem('f1_theme');
+
+  function applyTheme(theme) {
+    if (theme === 'light') {
+      document.documentElement.setAttribute('data-theme', 'light');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+    }
+    localStorage.setItem('f1_theme', theme);
+    // Update all knobs
+    document.querySelectorAll('.theme-btn-knob').forEach(k => {
+      k.textContent = theme === 'light' ? '☀' : '🌙';
+    });
+  }
+
+  // Init on load
+  const initTheme = saved || (prefersDark.matches ? 'dark' : 'light');
+  applyTheme(initTheme);
+
+  // Listen for system changes (only if no manual override)
+  prefersDark.addEventListener('change', e => {
+    if (!localStorage.getItem('f1_theme')) {
+      applyTheme(e.matches ? 'dark' : 'light');
+    }
+  });
+
+  // Toggle handler - works for any .theme-btn on the page
+  window.toggleTheme = function() {
+    const current = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+    applyTheme(current === 'dark' ? 'light' : 'dark');
+  };
+})();

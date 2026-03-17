@@ -1491,3 +1491,189 @@ body { animation: bodyFadeIn 0.35s ease both; }
       rgba(6,6,8,0.6) 70%, var(--bg0) 100%) !important;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   DARK / LIGHT MODE TOGGLE
+   ══════════════════════════════════════════════════════════════════════════════ */
+:root {
+  color-scheme: dark;
+}
+[data-theme="light"] {
+  color-scheme: light;
+  --bg0: #f4f4f6; --bg1: #eaeaed; --bg2: #e0e0e5; --bg3: #d4d4da;
+  --bg4: #c8c8cf; --bg5: #bcbcc4;
+  --border: rgba(0,0,0,0.1); --border2: rgba(0,0,0,0.18);
+  --txt: #0a0a0f; --txt2: #3a3a4a; --txt3: #7a7a8a;
+}
+[data-theme="light"] .topnav { background: rgba(244,244,246,0.95) !important; }
+[data-theme="light"] .hero { background: var(--bg0) !important; }
+[data-theme="light"] .hero-bg { background: radial-gradient(ellipse 80% 60% at 30% 50%,rgba(225,6,0,0.07) 0%,transparent 70%) !important; }
+
+.theme-btn {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  width: 32px; height: 18px;
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  padding: 0 2px;
+}
+.theme-btn-knob {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--txt3);
+  transition: transform 0.2s, background 0.2s;
+  font-size: 8px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--bg0);
+}
+[data-theme="light"] .theme-btn-knob { transform: translateX(14px); background: var(--red); }
+
+/* ── Mobile homepage overhaul ────────────────────────────────────────────────── */
+@media (max-width: 860px) {
+  .hero { min-height: 70vh !important; }
+
+  /* Circuit image: full width, dimmed background on mobile */
+  .hero-img-wrap {
+    width: 100% !important;
+    opacity: 0.12 !important;
+  }
+
+  /* All content readable on top of dimmed image */
+  .hero-content {
+    padding: 1.75rem 1.1rem 1.5rem !important;
+    max-width: 100% !important;
+    justify-content: flex-end !important;
+  }
+
+  /* Hide UPCOMING / RACE title on mobile - wastes space */
+  .hero-title { display: none !important; }
+
+  /* Race name big and clear */
+  .hero-race-name {
+    font-size: clamp(1.6rem, 7vw, 2.4rem) !important;
+    margin-bottom: 0.3rem !important;
+  }
+
+  .hero-tag { margin-bottom: 0.4rem !important; }
+  .hero-circuit-txt { margin-bottom: 0.9rem !important; font-size: 0.78rem !important; }
+
+  /* Countdown compact */
+  .hero-cd { gap: 1rem !important; margin-bottom: 0.85rem !important; }
+  .hcd-num { font-size: clamp(2rem, 9vw, 3.2rem) !important; }
+  .hcd-sep { font-size: clamp(1.5rem, 7vw, 2.5rem) !important; }
+
+  /* Pills wrap tight */
+  .hero-pills { gap: 0.25rem !important; margin-bottom: 0.7rem !important; }
+  .hs-pill { font-size: 0.56rem !important; padding: 3px 7px !important; }
+
+  /* Session strip - bigger touch targets */
+  .scd-card { min-width: 120px !important; padding: 0.65rem 0.75rem !important; }
+  .scd-timer { font-size: 0.88rem !important; }
+  .scd-lbl { font-size: 0.52rem !important; }
+
+  /* Race strip */
+  .rs-card { width: 120px !important; padding: 0.65rem !important; }
+  .rs-name { font-size: 0.7rem !important; }
+
+  /* Cancelled banner stack on mobile */
+  .cancelled-banner { flex-direction: row !important; gap: 0.65rem !important; padding: 0.75rem 0.9rem !important; }
+  .cb-text { font-size: 0.76rem !important; }
+
+  /* Standings */
+  .sv-pts { min-width: 36px; text-align: right; }
+  .sv-team { display: none; }
+
+  /* Last race podium */
+  .lr-step-team { display: none; }
+  .lr-photo-ph { height: 160px !important; }
+  .lr-photo { height: 160px !important; }
+
+  /* Sections padding */
+  .page { padding: 1rem 0.85rem !important; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   CIRCUIT TRACK LAYOUT
+   ══════════════════════════════════════════════════════════════════════════════ */
+.circuit-layout-wrap {
+  background: var(--bg2);
+  border-radius: var(--r2);
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  position: relative;
+  overflow: hidden;
+}
+.circuit-layout-wrap::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 60%, var(--bg1) 100%);
+}
+.circuit-svg { max-width: 100%; max-height: 220px; }
+.circuit-svg path {
+  fill: none;
+  stroke: rgba(225,6,0,0.7);
+  stroke-width: 8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 6px rgba(225,6,0,0.4));
+}
+.circuit-drs { stroke: rgba(39,244,210,0.6) !important; }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   YOUTUBE EMBED
+   ══════════════════════════════════════════════════════════════════════════════ */
+.yt-embed-wrap {
+  position: relative;
+  padding-bottom: 56.25%;
+  height: 0;
+  overflow: hidden;
+  border-radius: var(--r2);
+  background: #000;
+}
+.yt-embed-wrap iframe {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  border: none;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   COUNTDOWN WIDGET (embeddable)
+   ══════════════════════════════════════════════════════════════════════════════ */
+.widget-preview {
+  background: var(--bg1);
+  border: 1px solid var(--border2);
+  border-radius: var(--r2);
+  padding: 0.85rem 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+}
+.widget-preview .w-logo {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 900;
+  color: var(--red);
+}
+.widget-preview .w-cd {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: var(--txt);
+  letter-spacing: -0.5px;
+}
+.widget-preview .w-label {
+  font-size: 0.65rem;
+  color: var(--txt3);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}

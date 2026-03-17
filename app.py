@@ -1626,3 +1626,45 @@ if __name__ == "__main__":
     t = threading.Thread(target=_prefetch, daemon=True)
     t.start()
     app.run(debug=True, port=5000, host="0.0.0.0")
+
+# ── API: Countdown widget (embeddable HTML) ────────────────────────────────────
+@app.route("/widget/countdown")
+def widget_countdown():
+    """Embeddable countdown widget - add as iframe on any site."""
+    return render_template("widget_countdown.html", year=CURRENT_YEAR)
+
+# ── API: What-if simulator ─────────────────────────────────────────────────────
+@app.route("/simulator")
+def simulator_page():
+    return render_template("simulator.html", year=CURRENT_YEAR)
+
+@app.route("/api/simulator/standings")
+def api_simulator_standings():
+    try:
+        cal = jolpica("current/races")
+        ds  = jolpica("current/driverstandings")
+        races = cal.get("MRData",{}).get("RaceTable",{}).get("Races",[])
+        lists = ds.get("MRData",{}).get("StandingsTable",{}).get("StandingsLists",[])
+        if not lists: return jsonify({})
+        today = datetime.today().date()
+        remaining = [r for r in races if datetime.strptime(r["date"],"%Y-%m-%d").date() > today]
+        drivers = []
+        for s in lists[0].get("DriverStandings",[]):
+            d = s["Driver"]; c = (s.get("Constructors") or [{}])[0]
+            drivers.append({
+                "driver_id": d.get("driverId",""),
+                "name": f"{d.get('givenName','')} {d.get('familyName','')}".strip(),
+                "code": d.get("code","???"),
+                "team_id": c.get("constructorId",""),
+                "points": tofloat(s.get("points",0)),
+                "wins": toint(s.get("wins",0)),
+                "position": toint(s.get("position",0)),
+            })
+        return jsonify({
+            "drivers": drivers,
+            "remaining_races": [{"round": toint(r["round"]), "name": r.get("raceName","").replace(" Grand Prix","")} for r in remaining],
+            "max_per_race": 26,
+        })
+    except Exception as e:
+        print(f"[simulator] ERR: {e}")
+        return jsonify({})
