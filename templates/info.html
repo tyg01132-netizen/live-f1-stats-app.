@@ -2,7 +2,8 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
-  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg?v=9">
+  <link rel="shortcut icon" href="/static/favicon.svg?v=9"><meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Info — F1FORLIVE</title>
   <link rel="stylesheet" href="/static/style.css">
   <style>
@@ -103,12 +104,13 @@
           <table class="f1-table">
             <thead><tr><th>Team</th><th>Land</th><th>Titels</th><th>Eerste</th><th>Laatste</th></tr></thead>
             <tbody>
-              ${[['Ferrari','🇮🇹','16','1961','2008'],['Williams','🇬🇧','9','1980','1997'],['McLaren','🇬🇧','8','1974','1998'],['Mercedes','🇩🇪','8','1954','2021'],['Red Bull','🇦🇹','7','2010','2023'],['Lotus','🇬🇧','7','1963','1978'],['Brabham','🇦🇺','2','1966','1967'],].map(([t,f,n,a,b])=>`<tr>
-                <td><div class="driver-cell"><div class="team-bar" style="background:${teamColor(t.toLowerCase().replace(/ /g,'_'))}"></div><div class="driver-name">${t}</div></div></td>
-                <td>${f}</td><td class="pts" style="color:var(--gold)">${n}</td>
-                <td style="font-family:var(--font-mono);color:var(--txt3)">${a}</td>
-                <td style="font-family:var(--font-mono);color:var(--txt3)">${b}</td>
-              </tr>`).join('')}
+              <tr><td><div class="driver-cell"><div class="team-bar" style="background:#E8002D"></div><div class="driver-name">Ferrari</div></div></td><td>🇮🇹</td><td class="pts" style="color:var(--gold)">16</td><td style="font-family:var(--font-mono);color:var(--txt3)">1961</td><td style="font-family:var(--font-mono);color:var(--txt3)">2008</td></tr>
+              <tr><td><div class="driver-cell"><div class="team-bar" style="background:#64C4FF"></div><div class="driver-name">Williams</div></div></td><td>🇬🇧</td><td class="pts" style="color:var(--gold)">9</td><td style="font-family:var(--font-mono);color:var(--txt3)">1980</td><td style="font-family:var(--font-mono);color:var(--txt3)">1997</td></tr>
+              <tr><td><div class="driver-cell"><div class="team-bar" style="background:#FF8000"></div><div class="driver-name">McLaren</div></div></td><td>🇬🇧</td><td class="pts" style="color:var(--gold)">8</td><td style="font-family:var(--font-mono);color:var(--txt3)">1974</td><td style="font-family:var(--font-mono);color:var(--txt3)">1998</td></tr>
+              <tr><td><div class="driver-cell"><div class="team-bar" style="background:#27F4D2"></div><div class="driver-name">Mercedes</div></div></td><td>🇩🇪</td><td class="pts" style="color:var(--gold)">8</td><td style="font-family:var(--font-mono);color:var(--txt3)">1954</td><td style="font-family:var(--font-mono);color:var(--txt3)">2021</td></tr>
+              <tr><td><div class="driver-cell"><div class="team-bar" style="background:#3671C6"></div><div class="driver-name">Red Bull</div></div></td><td>🇦🇹</td><td class="pts" style="color:var(--gold)">7</td><td style="font-family:var(--font-mono);color:var(--txt3)">2010</td><td style="font-family:var(--font-mono);color:var(--txt3)">2023</td></tr>
+              <tr><td><div class="driver-cell"><div class="team-bar" style="background:#888"></div><div class="driver-name">Lotus</div></div></td><td>🇬🇧</td><td class="pts" style="color:var(--gold)">7</td><td style="font-family:var(--font-mono);color:var(--txt3)">1963</td><td style="font-family:var(--font-mono);color:var(--txt3)">1978</td></tr>
+              <tr><td><div class="driver-cell"><div class="team-bar" style="background:#888"></div><div class="driver-name">Brabham</div></div></td><td>🇦🇺</td><td class="pts" style="color:var(--gold)">2</td><td style="font-family:var(--font-mono);color:var(--txt3)">1966</td><td style="font-family:var(--font-mono);color:var(--txt3)">1967</td></tr>
             </tbody>
           </table>
         </div>

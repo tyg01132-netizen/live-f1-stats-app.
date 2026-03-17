@@ -160,8 +160,8 @@ function renderSchedule(nextRace, activeSession) {
     if (!s?.iso) return '';
     const t = new Date(s.iso), done=t<=now, isoStr=s.iso;
     const isLive = activeSession && (activeSession.toLowerCase().includes(SESS_LABELS[k]?.toLowerCase())||false);
-    const dateStr = t.toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'short'});
-    const timeStr = t.toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'});
+    const dateStr = t.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'});
+    const timeStr = t.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
     const remKey = `${nextRace.round}_${k}`;
     const hasRem = !!reminders[remKey];
     const statusTxt = done ? '✓ Afgelopen' : isLive ? '🔴 LIVE' : '—';
@@ -178,8 +178,8 @@ function renderSchedule(nextRace, activeSession) {
   // Race card
   const raceT = new Date(nextRace.iso||(nextRace.date+'T'+(nextRace.time||'14:00:00')+'Z'));
   const raceDone=raceT<=now, raceRemKey=`${nextRace.round}_Race`, hasRaceRem=!!reminders[raceRemKey];
-  const raceDateStr=raceT.toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'short'});
-  const raceTimeStr=raceT.toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'});
+  const raceDateStr=raceT.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'});
+  const raceTimeStr=raceT.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
   const raceCls=raceDone?'ss-done':'ss-next';
   const raceStatusTxt=raceDone?'✓ Afgelopen':'—';
   return cards + `<div class="ss-card ${raceCls}" style="border-color:${raceDone?'var(--border)':'rgba(225,6,0,0.5)'}">

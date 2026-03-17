@@ -1677,3 +1677,215 @@ body { animation: bodyFadeIn 0.35s ease both; }
   text-transform: uppercase;
   letter-spacing: 1.5px;
 }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   LIGHT MODE — comprehensive fixes
+   ══════════════════════════════════════════════════════════════════════════════ */
+[data-theme="light"] {
+  --bg0: #f2f2f5; --bg1: #e8e8ec; --bg2: #dddde3; --bg3: #d0d0d8;
+  --bg4: #c4c4ce; --bg5: #b8b8c4;
+  --border: rgba(0,0,0,0.1); --border2: rgba(0,0,0,0.18);
+  --txt: #0c0c14; --txt2: #383848; --txt3: #72728a;
+}
+
+/* Hero gradient fix for light mode */
+[data-theme="light"] .hero-img-wrap::before {
+  background:
+    linear-gradient(90deg,
+      var(--bg0) 0%, var(--bg0) 3%, rgba(242,242,245,0.92) 18%,
+      rgba(242,242,245,0.5) 42%, rgba(242,242,245,0.15) 68%, transparent 82%
+    ),
+    linear-gradient(to bottom,
+      var(--bg0) 0%, rgba(242,242,245,0.5) 8%,
+      transparent 20%, transparent 80%,
+      rgba(242,242,245,0.5) 92%, var(--bg0) 100%
+    ) !important;
+}
+
+/* Topnav */
+[data-theme="light"] .topnav {
+  background: rgba(242,242,245,0.97) !important;
+  border-bottom-color: rgba(0,0,0,0.12) !important;
+}
+[data-theme="light"] .nav-links a { color: var(--txt3); }
+[data-theme="light"] .nav-links a:hover,
+[data-theme="light"] .nav-links a.active { color: var(--txt); background: var(--bg3); }
+
+/* Cards */
+[data-theme="light"] .card { box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+
+/* Standings bars */
+[data-theme="light"] .sv-row { border-bottom-color: rgba(0,0,0,0.06); }
+
+/* Team color bars stay vivid */
+[data-theme="light"] .team-bar { opacity: 0.85; }
+
+/* Race strip */
+[data-theme="light"] .rs-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+
+/* Cancelled banner */
+[data-theme="light"] .cancelled-banner {
+  background: rgba(255,140,0,0.07);
+  border-color: rgba(255,140,0,0.3);
+}
+
+/* Section labels */
+[data-theme="light"] .section-label::after { background: rgba(0,0,0,0.1); }
+
+/* Scrollbar */
+[data-theme="light"] ::-webkit-scrollbar-track { background: var(--bg2); }
+[data-theme="light"] ::-webkit-scrollbar-thumb { background: var(--bg4); }
+
+/* Tabs */
+[data-theme="light"] .tabs { border-bottom-color: rgba(0,0,0,0.1); }
+[data-theme="light"] .tab-btn { color: var(--txt3); }
+[data-theme="light"] .tab-btn.active { color: var(--txt); background: var(--bg2); }
+
+/* Spinner */
+[data-theme="light"] .spinner { border-color: rgba(0,0,0,0.1); border-top-color: var(--red); }
+
+/* Live pill */
+[data-theme="light"] .live-pill { border-color: rgba(0,0,0,0.12); color: var(--txt3); }
+
+/* Nav hamburger */
+[data-theme="light"] .nav-hamburger span { background: var(--txt); }
+
+/* Nav overlay in light mode */
+[data-theme="light"] .nav-links {
+  background: rgba(242,242,245,0.98);
+  border-bottom-color: rgba(0,0,0,0.1);
+}
+
+/* Session strip */
+[data-theme="light"] .scd-card { box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+
+/* Hero countdown numbers */
+[data-theme="light"] .hcd-sep { color: rgba(225,6,0,0.2); }
+
+/* Weather widget */
+[data-theme="light"] .ww-hour { background: var(--bg2); }
+
+/* Circuit layout */
+[data-theme="light"] .circuit-layout-wrap { background: var(--bg2); }
+[data-theme="light"] .circuit-svg path { stroke: rgba(225,6,0,0.8); }
+
+/* Table rows */
+[data-theme="light"] .f1-table tbody tr:hover td { background: rgba(0,0,0,0.03); }
+[data-theme="light"] .f1-table td { border-bottom-color: rgba(0,0,0,0.05); }
+[data-theme="light"] .f1-table th { border-bottom-color: rgba(0,0,0,0.1); color: var(--txt3); }
+
+/* Res-row */
+[data-theme="light"] .res-row:hover { background: rgba(0,0,0,0.02); }
+
+/* Empty state */
+[data-theme="light"] .empty .icon { opacity: 0.3; }
+
+/* Hero mobile image dimming */
+@media(max-width:860px) {
+  [data-theme="light"] .hero-img-wrap { opacity: 0.08 !important; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   CRITICAL FIXES — nav toggle position + mobile hero
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* Theme toggle — push to right side, never overlap logo */
+.theme-btn {
+  margin-left: auto;
+  flex-shrink: 0;
+  order: 10; /* comes after nav-links */
+}
+/* On mobile: toggle stays visible between logo and hamburger */
+@media (max-width: 860px) {
+  .topnav { gap: 0.5rem; }
+  .nav-logo { flex-shrink: 0; margin-right: 0; }
+  .theme-btn { margin-left: auto; order: 10; }
+  .nav-hamburger { order: 11; margin-left: 0.5rem; }
+  /* Hide live pill on mobile to save space */
+  .live-pill { display: none !important; }
+}
+
+/* Mobile hero — fix the huge blank space */
+@media (max-width: 860px) {
+  /* Show circuit image as subtle full background */
+  .hero-img-wrap {
+    width: 100% !important;
+    height: 100% !important;
+    opacity: 0.18 !important;
+  }
+  .hero-img-wrap::before {
+    background:
+      linear-gradient(to bottom,
+        var(--bg0) 0%,
+        rgba(0,0,0,0) 30%,
+        rgba(0,0,0,0) 55%,
+        var(--bg0) 100%
+      ) !important;
+  }
+  /* Content fills full height, justified to center (not bottom!) */
+  .hero {
+    min-height: 60vh !important;
+    justify-content: flex-end !important;
+  }
+  .hero-content {
+    padding: 1.5rem 1.1rem !important;
+    justify-content: flex-end !important;
+    max-width: 100% !important;
+  }
+  /* Make race name huge and impactful */
+  .hero-race-name {
+    font-size: clamp(1.8rem, 8vw, 2.8rem) !important;
+    line-height: 1 !important;
+    margin-bottom: 0.25rem !important;
+  }
+  /* Compact hero-tag */
+  .hero-tag {
+    font-size: 0.58rem !important;
+    margin-bottom: 0.3rem !important;
+  }
+  /* Hide circuit text on mobile — saves space */
+  .hero-circuit-txt { font-size: 0.72rem !important; margin-bottom: 0.75rem !important; }
+  /* Countdown */
+  .hero-cd {
+    gap: 0.85rem !important;
+    margin-bottom: 0.75rem !important;
+  }
+  .hcd-num {
+    font-size: clamp(2.2rem, 10vw, 3.5rem) !important;
+    letter-spacing: -2px !important;
+  }
+  .hcd-sep {
+    font-size: clamp(1.6rem, 7vw, 2.8rem) !important;
+  }
+  .hcd-lbl { font-size: 0.5rem !important; letter-spacing: 2px !important; }
+  /* Session pills small */
+  .hero-pills { margin-bottom: 0.6rem !important; gap: 0.25rem !important; }
+  .hs-pill { font-size: 0.54rem !important; padding: 2px 6px !important; }
+  /* Weather widget smaller on mobile */
+  #h-weather { max-width: 100% !important; padding: 0.65rem 0.75rem !important; }
+  #hw-strategies > div { padding: 0.4rem 0.55rem !important; }
+}
+
+/* Light mode mobile hero — slightly stronger image */
+@media (max-width: 860px) {
+  [data-theme="light"] .hero-img-wrap { opacity: 0.1 !important; }
+}
+
+/* ── Simulator mobile fixes ──────────────────────────────────────────────────── */
+@media (max-width: 860px) {
+  .sim-grid { grid-template-columns: 1fr !important; }
+  .winner-select { font-size: 0.82rem !important; }
+  .sim-name { width: 80px !important; font-size: 0.75rem !important; }
+  .race-head-name { font-size: 0.65rem !important; }
+  .sim-pts-total { min-width: 32px !important; }
+  /* Stack standings below races on mobile */
+  .sim-grid > div:last-child { margin-top: 1.5rem; }
+}
+
+/* ── Records page mobile ─────────────────────────────────────────────────────── */
+@media (max-width: 860px) {
+  .rec-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 0.5rem !important; }
+  .rec-card .rec-num { font-size: 1.8rem !important; }
+  .rec-card .rec-lbl { font-size: 0.68rem !important; }
+  .rec-card .rec-who { font-size: 0.6rem !important; }
+}

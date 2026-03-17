@@ -1593,6 +1593,110 @@ def api_race_positions(year, round_num):
         return jsonify({})
 
 
+# ── API: Homepage weather + strategy ─────────────────────────────────────────
+@app.route("/api/race-strategy/<circuit_id>")
+def api_race_strategy(circuit_id):
+    """Weather + tyre strategy advice for a circuit."""
+    try:
+        city = CIRCUIT_CITIES.get(circuit_id, circuit_id.replace("_"," ").title())
+        r = requests.get(f"https://wttr.in/{city}?format=j1",
+                         headers={"User-Agent":"F1Dashboard/3.0"}, timeout=8)
+        if r.status_code != 200:
+            return jsonify({"error":"Weerdata niet beschikbaar"})
+        d = r.json()
+        cur = d.get("current_condition",[{}])[0]
+        today = d.get("weather",[{}])[0]
+        hourly = today.get("hourly",[])
+
+        temp = int(cur.get("temp_C",20))
+        humidity = int(cur.get("humidity",50))
+        wind = int(cur.get("windspeedKmph",0))
+        rain_chance = max(int(h.get("chanceofrain",0)) for h in hourly) if hourly else 0
+        code = int(cur.get("weatherCode",113))
+
+        # Determine condition
+        is_rain = code in [176,185,263,266,281,284,293,296,299,302,305,308,
+                           311,314,317,320,356,359,362,365,374,377,386,389]
+        is_cloudy = code in [116,119,122,143,248,260]
+        is_sunny = code in [113]
+
+        # Strategy advice
+        strategies = []
+
+        if rain_chance > 60 or is_rain:
+            strategies.append({
+                "icon": "🌧",
+                "title": "Regen verwacht",
+                "desc": "Intermediates of full wets bij de start. Safety car scenario waarschijnlijk — teams die laat pitten naar slicks hebben voordeel.",
+                "type": "danger"
+            })
+            strategies.append({
+                "icon": "🔄",
+                "title": "Undercut kans hoog",
+                "desc": "Bij wisselende omstandigheden is de pitstop-timing cruciaal. Teams reageren direct op track position na safety car.",
+                "type": "info"
+            })
+        elif rain_chance > 30:
+            strategies.append({
+                "icon": "⛅",
+                "title": "Kans op bui",
+                "desc": "Medium als startband voor flexibiliteit. Overcut-strategie riskant — hou intermediates klaar in de pitbox.",
+                "type": "warning"
+            })
+        
+        if temp > 35:
+            strategies.append({
+                "icon": "🔥",
+                "title": f"Hoge temperatuur ({temp}°C)",
+                "desc": "Harde compounds favoriet — zachte banden degraderen snel. Verwacht 2-stop strategie bij de meeste teams.",
+                "type": "danger"
+            })
+        elif temp < 15:
+            strategies.append({
+                "icon": "🥶",
+                "title": f"Koude track ({temp}°C)",
+                "desc": "Zachtste compound werkt beter voor opwarming. 1-stop strategie haalbaar door lagere degradatie.",
+                "type": "info"
+            })
+        else:
+            strategies.append({
+                "icon": "✅",
+                "title": f"Ideale omstandigheden ({temp}°C)",
+                "desc": "Medium start → Hard voor 1-stop, of Soft → Medium voor agressieve undercut.",
+                "type": "success"
+            })
+
+        if wind > 40:
+            strategies.append({
+                "icon": "💨",
+                "title": f"Harde wind ({wind} km/u)",
+                "desc": "Hoge downforce setup voordelig. Energie-management lastiger — ERS herlaadt minder efficient in rechte lijn.",
+                "type": "warning"
+            })
+
+        return jsonify({
+            "city": city,
+            "temp_c": temp,
+            "humidity": humidity,
+            "wind_kmph": wind,
+            "rain_chance": rain_chance,
+            "desc": (cur.get("weatherDesc") or [{}])[0].get("value",""),
+            "weather_code": cur.get("weatherCode",""),
+            "strategies": strategies,
+            "forecast": [
+                {
+                    "time": h.get("time",""),
+                    "temp": h.get("tempC",""),
+                    "rain": h.get("chanceofrain","0"),
+                    "wind": h.get("windspeedKmph",""),
+                }
+                for h in hourly[:6]
+            ]
+        })
+    except Exception as e:
+        print(f"[race-strategy] ERR: {e}")
+        return jsonify({"error": "Weerdata niet beschikbaar"})
+
 # ── Startup prefetch — warm de cache op vóór eerste bezoek ────────────────────
 def _prefetch():
     """Fetches de meestgebruikte data direct bij opstarten in de achtergrond."""

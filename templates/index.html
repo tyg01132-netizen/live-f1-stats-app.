@@ -2,7 +2,8 @@
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
-  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg?v=9">
+  <link rel="shortcut icon" href="/static/favicon.svg?v=9">
   <meta name="theme-color" content="#e10600">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -174,6 +175,20 @@
       <div class="hcd-unit"><div class="hcd-num" id="hcd-s">--</div><div class="hcd-lbl">Sec</div></div>
     </div>
     <div class="hero-pills" id="h-pills"></div>
+  <!-- Weather + strategy widget -->
+  <div id="h-weather" style="display:none;margin-top:0.5rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:var(--r2);padding:0.85rem 1rem;max-width:440px;backdrop-filter:blur(8px)">
+    <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.65rem">
+      <div id="hw-icon" style="font-size:1.6rem;line-height:1">🌡</div>
+      <div>
+        <div style="display:flex;align-items:baseline;gap:0.5rem">
+          <div id="hw-temp" style="font-family:var(--font-display);font-size:1.4rem;font-weight:900;line-height:1"></div>
+          <div id="hw-desc" style="font-size:0.72rem;color:var(--txt3)"></div>
+        </div>
+        <div id="hw-stats" style="font-size:0.65rem;color:var(--txt3);margin-top:2px"></div>
+      </div>
+    </div>
+    <div id="hw-strategies" style="display:flex;flex-direction:column;gap:0.4rem"></div>
+  </div>
   </div>
   <div class="scroll-hint"><span>↓</span>SCROLL</div>
 </div>
@@ -263,7 +278,7 @@ function buildPills(sessions, raceIso) {
   arr.forEach((s,i)=>{ if(new Date(s.v.iso)>now && ni===-1) ni=i; });
   el('h-pills').innerHTML = arr.map(({k,v},i)=>{
     const t=new Date(v.iso), done=t<=now, isNext=i===ni;
-    return `<div class="hs-pill ${done?'done':isNext?'next':''}">${SESS_LBL[k]||k} · ${t.toLocaleDateString('nl-NL',{day:'numeric',month:'short'})}</div>`;
+    return `<div class="hs-pill ${done?'done':isNext?'next':''}">${SESS_LBL[k]||k} · ${t.toLocaleDateString(undefined,{day:'numeric',month:'short'})}</div>`;
   }).join('');
 }
 
@@ -276,16 +291,16 @@ function buildSessCards(sessions, raceIso) {
   const raceDone = raceT<=now, raceNext = !raceDone && ni===-1;
   let html = arr.map(({k,v},i)=>{
     const t=new Date(v.iso), done=t<=now, isNext=i===ni&&!done;
-    const ds=t.toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'short'});
-    const ts=t.toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'});
+    const ds=t.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'});
+    const ts=t.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
     return `<div class="scd-card ${done?'scd-done':isNext?'scd-next':''}">
       <div class="scd-lbl">${SESS_LBL[k]||k}</div>
       <div class="scd-date">${ds} · ${ts}</div>
       <div class="scd-timer" id="scdt-${k}">${done?'✓ Voorbij':'...'}</div>
     </div>`;
   }).join('');
-  const rds=raceT.toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'short'});
-  const rts=raceT.toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'});
+  const rds=raceT.toLocaleDateString(undefined,{weekday:'short',day:'numeric',month:'short'});
+  const rts=raceT.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
   html+=`<div class="scd-card scd-race ${raceDone?'scd-done':raceNext?'scd-next':''}">
     <div class="scd-lbl">🏁 Race</div>
     <div class="scd-date">${rds} · ${rts}</div>
@@ -293,6 +308,13 @@ function buildSessCards(sessions, raceIso) {
   </div>`;
   inner.innerHTML = html;
   el('scd-strip').style.display = 'block';
+  // Show local timezone info
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const tzOffset = -new Date().getTimezoneOffset()/60;
+  const tzLabel = document.createElement('div');
+  tzLabel.style.cssText = 'font-size:0.58rem;color:var(--txt3);letter-spacing:1px;text-transform:uppercase;padding:0.3rem 1.5rem 0;text-align:right;max-width:1440px;margin:0 auto';
+  tzLabel.textContent = `🕐 Tijden in jouw lokale tijd — ${tz} (UTC${tzOffset>=0?'+':''}${tzOffset})`;
+  el('scd-strip').appendChild(tzLabel);
 
   function makeTimer(target, id) {
     if(target<=now) return;
@@ -336,6 +358,7 @@ async function loadHero() {
   startCD(iso);
   if(d.sessions) { buildPills(d.sessions, iso); buildSessCards(d.sessions, iso); }
   loadCircuitImg(d.circuit_id, d.circuit);
+  loadWeatherWidget(d.circuit_id);
   setTimeout(()=>window.F1Notif?.showPrompt(d.sessions||{}), 4000);
 }
 
@@ -438,6 +461,35 @@ async function loadStandings() {
       </div>`;
     }).join('')}</div>`;
   } else empty('con-st','🏗','Geen data');
+}
+
+// ── Weather + strategy widget ─────────────────────────────────────────────────
+const WEATHER_ICONS_MAP = {
+  113:'☀️',116:'⛅',119:'☁️',122:'☁️',143:'🌫️',176:'🌦️',
+  200:'⛈️',227:'🌨️',263:'🌦️',266:'🌧️',293:'🌦️',296:'🌧️',
+  299:'🌧️',302:'🌧️',305:'🌧️',308:'🌧️',356:'🌧️',386:'⛈️',
+};
+async function loadWeatherWidget(circuitId) {
+  if(!circuitId) return;
+  const w = await get(`/api/race-strategy/${circuitId}`);
+  if(!w || w.error) return;
+  const wrap = el('h-weather'); if(!wrap) return;
+  const icon = WEATHER_ICONS_MAP[parseInt(w.weather_code)] || '🌡️';
+  el('hw-icon').textContent = icon;
+  el('hw-temp').textContent = `${w.temp_c}°C`;
+  el('hw-desc').textContent = w.desc;
+  el('hw-stats').textContent = `💧 ${w.rain_chance}% regen · 💨 ${w.wind_kmph} km/u · 📍 ${w.city}`;
+  const typeColors = {danger:'rgba(225,6,0,0.15)',warning:'rgba(255,160,0,0.12)',info:'rgba(39,244,210,0.1)',success:'rgba(0,200,80,0.1)'};
+  const typeBorders = {danger:'rgba(225,6,0,0.3)',warning:'rgba(255,160,0,0.3)',info:'rgba(39,244,210,0.25)',success:'rgba(0,200,80,0.25)'};
+  el('hw-strategies').innerHTML = (w.strategies||[]).map(s=>`
+    <div style="display:flex;gap:0.6rem;align-items:flex-start;background:${typeColors[s.type]||typeColors.info};border:1px solid ${typeBorders[s.type]||typeBorders.info};border-radius:6px;padding:0.5rem 0.65rem">
+      <span style="font-size:1rem;flex-shrink:0;margin-top:1px">${s.icon}</span>
+      <div>
+        <div style="font-family:var(--font-display);font-size:0.7rem;font-weight:900;letter-spacing:0.5px">${s.title}</div>
+        <div style="font-size:0.68rem;color:var(--txt2);line-height:1.45;margin-top:2px">${s.desc}</div>
+      </div>
+    </div>`).join('');
+  wrap.style.display = 'block';
 }
 
 // ── Boot — alles parallel, pagina toont DIRECT ────────────────────────────────
