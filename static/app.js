@@ -227,3 +227,44 @@ window.F1Notif = {
     setTimeout(() => p.remove(), 12000);
   }
 };
+
+// ── Scroll-triggered animations ───────────────────────────────────────────────
+(function() {
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('anim-visible');
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12 });
+
+  function observe() {
+    document.querySelectorAll('.anim, .anim-stagger').forEach(el => io.observe(el));
+  }
+
+  // Run on load and whenever new content might be injected
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', observe);
+  } else {
+    observe();
+  }
+  // Re-observe after dynamic content loads (called from data loaders)
+  window._reobserve = observe;
+})();
+
+// ── Animated number counter ───────────────────────────────────────────────────
+function animateNumber(el, target, duration = 800, suffix = '') {
+  if (!el) return;
+  const start = 0;
+  const startTime = performance.now();
+  function step(now) {
+    const progress = Math.min((now - startTime) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3); // ease out cubic
+    const current = Math.round(start + (target - start) * eased);
+    el.textContent = current + suffix;
+    if (progress < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+window.animateNumber = animateNumber;

@@ -1066,3 +1066,428 @@ button { font-family: inherit; cursor: pointer; border: none; outline: none; }
   .tabs { gap: 0 !important; }
   .tab-btn { padding: 0.45rem 0.6rem !important; font-size: 0.68rem !important; }
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   ANIMATIES
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── Pagina-entrance ─────────────────────────────────────────────── */
+@keyframes fadeUp   { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeIn   { from{opacity:0} to{opacity:1} }
+@keyframes slideInL { from{opacity:0;transform:translateX(-24px)} to{opacity:1;transform:translateX(0)} }
+@keyframes slideInR { from{opacity:0;transform:translateX(24px)} to{opacity:1;transform:translateX(0)} }
+@keyframes scaleIn  { from{opacity:0;transform:scale(0.93)} to{opacity:1;transform:scale(1)} }
+@keyframes revealW  { from{width:0} to{width:100%} }
+@keyframes countUp  { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+/* Animate-on-scroll class — JS adds .anim-visible */
+.anim { opacity:0; transition: opacity 0.55s ease, transform 0.55s ease; }
+.anim.from-bottom { transform: translateY(28px); }
+.anim.from-left   { transform: translateX(-28px); }
+.anim.from-right  { transform: translateX(28px); }
+.anim.scale       { transform: scale(0.94); }
+.anim.anim-visible { opacity:1 !important; transform:none !important; }
+
+/* Staggered children */
+.anim-stagger > * { opacity:0; transform:translateY(18px); transition:opacity 0.4s ease, transform 0.4s ease; }
+.anim-stagger.anim-visible > *:nth-child(1)  { opacity:1;transform:none;transition-delay:0s }
+.anim-stagger.anim-visible > *:nth-child(2)  { opacity:1;transform:none;transition-delay:0.07s }
+.anim-stagger.anim-visible > *:nth-child(3)  { opacity:1;transform:none;transition-delay:0.14s }
+.anim-stagger.anim-visible > *:nth-child(4)  { opacity:1;transform:none;transition-delay:0.21s }
+.anim-stagger.anim-visible > *:nth-child(5)  { opacity:1;transform:none;transition-delay:0.28s }
+.anim-stagger.anim-visible > *:nth-child(6)  { opacity:1;transform:none;transition-delay:0.35s }
+.anim-stagger.anim-visible > *:nth-child(7)  { opacity:1;transform:none;transition-delay:0.42s }
+.anim-stagger.anim-visible > *:nth-child(8)  { opacity:1;transform:none;transition-delay:0.49s }
+.anim-stagger.anim-visible > *:nth-child(n+9){ opacity:1;transform:none;transition-delay:0.56s }
+
+/* ── Red line reveal (section headers) ───────────────────────────── */
+.line-reveal {
+  position:relative; overflow:hidden;
+  animation: fadeIn 0.01s forwards;
+}
+.line-reveal::after {
+  content:''; position:absolute; bottom:0; left:0;
+  height:2px; background:var(--red);
+  width:0; animation: revealW 0.7s 0.2s ease forwards;
+}
+
+/* ── Number counter animation ────────────────────────────────────── */
+.counter-anim { animation: countUp 0.5s ease both; }
+
+/* ── Card hover lift ─────────────────────────────────────────────── */
+.card { transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s; }
+.card:hover {
+  border-color: rgba(225,6,0,0.25);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  transform: translateY(-2px);
+}
+
+/* ── Standings bar fill animation ────────────────────────────────── */
+@keyframes barGrow { from{width:0!important} }
+.sv-row { animation: fadeUp 0.35s ease both; }
+.sv-row:nth-child(1)  { animation-delay: 0.02s }
+.sv-row:nth-child(2)  { animation-delay: 0.07s }
+.sv-row:nth-child(3)  { animation-delay: 0.12s }
+.sv-row:nth-child(4)  { animation-delay: 0.17s }
+.sv-row:nth-child(5)  { animation-delay: 0.22s }
+.sv-row:nth-child(6)  { animation-delay: 0.27s }
+.sv-row:nth-child(7)  { animation-delay: 0.32s }
+.sv-row:nth-child(8)  { animation-delay: 0.37s }
+.sv-row:nth-child(9)  { animation-delay: 0.42s }
+.sv-row:nth-child(10) { animation-delay: 0.47s }
+
+/* ── Table row entrance ──────────────────────────────────────────── */
+.f1-table tbody tr {
+  animation: slideInL 0.3s ease both;
+}
+.f1-table tbody tr:nth-child(1)  { animation-delay:0.04s }
+.f1-table tbody tr:nth-child(2)  { animation-delay:0.08s }
+.f1-table tbody tr:nth-child(3)  { animation-delay:0.12s }
+.f1-table tbody tr:nth-child(4)  { animation-delay:0.16s }
+.f1-table tbody tr:nth-child(5)  { animation-delay:0.20s }
+.f1-table tbody tr:nth-child(n+6){ animation-delay:0.24s }
+
+/* ── Race card hover ─────────────────────────────────────────────── */
+.rs-card { transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s; }
+.rs-card:not(.rs-past):not(.rs-cancelled):hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(225,6,0,0.15);
+}
+
+/* ── Nav link underline slide ────────────────────────────────────── */
+.nav-links a { position:relative; }
+.nav-links a::after {
+  content:''; position:absolute; bottom:2px; left:50%; right:50%;
+  height:2px; background:var(--red); border-radius:1px;
+  transition: left 0.2s ease, right 0.2s ease;
+}
+.nav-links a:hover::after, .nav-links a.active::after {
+  left:10%; right:10%;
+}
+
+/* ── Pulse dot (live indicator) ──────────────────────────────────── */
+@keyframes livePulse {
+  0%,100% { box-shadow:0 0 0 0 rgba(225,6,0,0.7); }
+  50%     { box-shadow:0 0 0 6px rgba(225,6,0,0); }
+}
+.live-pill.is-live .live-dot { animation: livePulse 1.4s ease infinite; }
+
+/* ── Hero content stagger ────────────────────────────────────────── */
+.hero-tag      { animation: fadeUp 0.5s 0.1s both; }
+.hero-title    { animation: fadeUp 0.55s 0.18s both; }
+.hero-race-name{ animation: fadeUp 0.5s 0.28s both; }
+.hero-circuit-txt { animation: fadeUp 0.45s 0.36s both; }
+.hero-cd       { animation: fadeUp 0.45s 0.44s both; }
+.hero-pills    { animation: fadeUp 0.4s 0.52s both; }
+
+/* ── Spinner upgrade ─────────────────────────────────────────────── */
+@keyframes spin { to{transform:rotate(360deg)} }
+.spinner {
+  width:28px; height:28px;
+  border:3px solid rgba(255,255,255,0.08);
+  border-top-color:var(--red);
+  border-radius:50%;
+  animation: spin 0.7s linear infinite;
+}
+
+/* ── Skeleton shimmer ────────────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position:-400px 0 }
+  100% { background-position: 400px 0 }
+}
+.skel {
+  background: linear-gradient(90deg, var(--bg3) 25%, var(--bg4) 50%, var(--bg3) 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s ease infinite;
+  border-radius: var(--r);
+}
+
+/* ── Tab active indicator ────────────────────────────────────────── */
+.tab-btn { position:relative; transition:color 0.2s, background 0.2s; overflow:hidden; }
+.tab-btn::after {
+  content:''; position:absolute; bottom:0; left:0; right:0;
+  height:2px; background:var(--red);
+  transform: scaleX(0); transition: transform 0.25s ease;
+}
+.tab-btn.active::after { transform: scaleX(1); }
+.tab-btn:hover:not(.active) { background:rgba(255,255,255,0.05); }
+
+/* ── Podium entrance ─────────────────────────────────────────────── */
+.lr-step {
+  animation: scaleIn 0.4s ease both;
+}
+.lr-step:nth-child(1) { animation-delay: 0.15s }
+.lr-step:nth-child(2) { animation-delay: 0.05s }
+.lr-step:nth-child(3) { animation-delay: 0.25s }
+
+/* ── Red accent line top of page ─────────────────────────────────── */
+body::before {
+  content:''; position:fixed; top:0; left:0; right:0;
+  height:3px; background:var(--red); z-index:9999;
+  animation: revealW 0.6s ease forwards;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   MOBILE VERBETERINGEN
+   ══════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 860px) {
+  /* Nav */
+  .topnav { padding:0 1rem; height:52px; }
+  .nav-logo span { font-size:1.1rem !important; }
+
+  /* Hero */
+  .hero { min-height:100svh; }
+  .hero-img-wrap { display:none !important; }
+  .hero-content {
+    padding: 5rem 1.25rem 2rem !important;
+    max-width:100% !important;
+    justify-content: flex-end !important;
+    min-height: 100svh;
+  }
+  .hero-title { font-size: clamp(3.5rem,18vw,6rem) !important; letter-spacing:-2px !important; }
+  .hero-race-name { font-size: clamp(1.3rem,6vw,2rem) !important; }
+  .hero-cd { gap:1rem !important; }
+  .hcd-num { font-size: clamp(2.2rem,10vw,3.5rem) !important; }
+  .hcd-sep { font-size: clamp(1.8rem,8vw,2.8rem) !important; }
+  .hero-pills { gap:0.3rem !important; }
+  .hs-pill { font-size:0.58rem !important; padding:3px 8px !important; }
+  .scroll-hint { display:none; }
+
+  /* Cancelled banner */
+  .cancelled-banner { flex-direction:column; gap:0.5rem; padding:0.75rem 1rem; }
+
+  /* Section padding */
+  .page { padding:1.25rem 1rem !important; }
+
+  /* Standings */
+  .sv-row { gap:0.5rem !important; }
+  .sv-name { font-size:0.82rem !important; }
+  .sv-team { font-size:0.65rem !important; }
+
+  /* Last race */
+  .lr-podium { gap:0.4rem !important; }
+  .lr-step-pos { font-size:1.2rem !important; }
+  .lr-step-name { font-size:0.68rem !important; }
+  .lr-step-team { font-size:0.6rem !important; }
+
+  /* Race strip */
+  .rs-card { width:130px !important; padding:0.7rem !important; }
+  .rs-name { font-size:0.72rem !important; }
+
+  /* Session strip */
+  .scd-card { min-width:130px !important; padding:0.65rem 0.75rem !important; }
+  .scd-timer { font-size:0.85rem !important; }
+
+  /* Tabs */
+  .tabs {
+    overflow-x:auto; flex-wrap:nowrap !important;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  .tabs::-webkit-scrollbar { display:none; }
+  .tab-btn { white-space:nowrap; flex-shrink:0; font-size:0.72rem !important; padding:0.5rem 0.75rem !important; }
+
+  /* Tables */
+  .card { overflow-x:auto; }
+  .f1-table { font-size:0.76rem; }
+  .f1-table th, .f1-table td { padding:0.45rem 0.6rem; }
+
+  /* Grids */
+  .grid-2, .grid-3 { grid-template-columns:1fr !important; }
+
+  /* Section header font */
+  .sec-title, .section-title { font-size:1.5rem !important; }
+
+  /* Calendar grid */
+  .cd-grid { grid-template-columns:1fr !important; }
+
+  /* Map */
+  #leaflet-map { height:360px !important; }
+
+  /* Sector times */
+  .sector-row { grid-template-columns:18px 1fr 70px 70px 70px 70px !important; font-size:0.68rem !important; }
+}
+
+@media (max-width:420px) {
+  .hero-title { font-size:3.2rem !important; }
+  .hcd-num { font-size:2.2rem !important; }
+  .hcd-sep { font-size:1.8rem !important; }
+  .hero-cd { gap:0.7rem !important; }
+  .rs-card { width:118px !important; }
+  .tab-btn { font-size:0.68rem !important; padding:0.45rem 0.6rem !important; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   MOBILE ANIMATIONS & VISUAL UPGRADES
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Page enter animation ────────────────────────────────────────────────────── */
+body { animation: bodyFadeIn 0.35s ease both; }
+@keyframes bodyFadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── Card hover lift (all devices) ──────────────────────────────────────────── */
+.card { transition: border-color 0.2s, box-shadow 0.2s; }
+.card:hover { border-color: rgba(225,6,0,0.2); box-shadow: 0 8px 32px rgba(0,0,0,0.35); }
+
+/* ── Nav logo pulse on hover ─────────────────────────────────────────────────── */
+.nav-logo svg { transition: transform 0.3s ease; }
+.nav-logo:hover svg { transform: rotate(90deg) scale(1.1); }
+
+/* ── Standings row flash on load ─────────────────────────────────────────────── */
+.sv-row {
+  animation: rowSlide 0.4s ease both;
+}
+.sv-row:nth-child(1)  { animation-delay: 0.05s }
+.sv-row:nth-child(2)  { animation-delay: 0.08s }
+.sv-row:nth-child(3)  { animation-delay: 0.11s }
+.sv-row:nth-child(4)  { animation-delay: 0.14s }
+.sv-row:nth-child(5)  { animation-delay: 0.17s }
+.sv-row:nth-child(6)  { animation-delay: 0.20s }
+.sv-row:nth-child(7)  { animation-delay: 0.23s }
+.sv-row:nth-child(8)  { animation-delay: 0.26s }
+.sv-row:nth-child(9)  { animation-delay: 0.29s }
+.sv-row:nth-child(10) { animation-delay: 0.32s }
+@keyframes rowSlide { from{opacity:0;transform:translateX(-12px)} to{opacity:1;transform:translateX(0)} }
+
+/* ── Race card pop in ────────────────────────────────────────────────────────── */
+.rs-card {
+  animation: cardPop 0.35s ease both;
+}
+@keyframes cardPop { from{opacity:0;transform:scale(0.94)} to{opacity:1;transform:scale(1)} }
+
+/* ── Hero countdown numbers pulse ───────────────────────────────────────────── */
+.hcd-num {
+  transition: transform 0.1s ease;
+}
+
+/* ── Tab button active slide ─────────────────────────────────────────────────── */
+.tab-btn {
+  position: relative;
+  transition: color 0.2s, background 0.2s;
+}
+.tab-btn::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 50%; right: 50%;
+  height: 2px;
+  background: var(--red);
+  border-radius: 2px;
+  transition: left 0.25s ease, right 0.25s ease;
+}
+.tab-btn.active::after { left: 8px; right: 8px; }
+
+/* ── Spinner upgrade ─────────────────────────────────────────────────────────── */
+.spinner {
+  border-color: rgba(225,6,0,0.15) !important;
+  border-top-color: var(--red) !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   MOBILE-SPECIFIC ANIMATIONS (touch feels responsive)
+   ══════════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 860px) {
+
+  /* Tap highlight removal — feels native */
+  * { -webkit-tap-highlight-color: transparent; }
+
+  /* Nav links slide in from top */
+  .nav-links.open {
+    animation: navSlideDown 0.28s cubic-bezier(0.4,0,0.2,1) both;
+  }
+  @keyframes navSlideDown {
+    from { opacity:0; transform:translateY(-12px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  /* Hero title animates in on mobile */
+  .hero-title {
+    animation: heroTitleIn 0.6s cubic-bezier(0.16,1,0.3,1) 0.1s both;
+  }
+  @keyframes heroTitleIn {
+    from { opacity:0; transform:translateY(30px) skewY(2deg); }
+    to   { opacity:1; transform:translateY(0) skewY(0); }
+  }
+
+  /* Countdown numbers pop in */
+  .hero-cd {
+    animation: cdFadeUp 0.5s ease 0.3s both;
+  }
+  @keyframes cdFadeUp {
+    from { opacity:0; transform:translateY(16px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  /* Race strip cards scroll animation */
+  .rs-card {
+    transition: transform 0.18s ease, border-color 0.18s;
+  }
+  .rs-card:active {
+    transform: scale(0.95) !important;
+  }
+
+  /* Section headers slide in */
+  .sec-hd, .section-header {
+    animation: secSlide 0.45s ease both;
+  }
+  @keyframes secSlide {
+    from { opacity:0; transform:translateX(-20px); }
+    to   { opacity:1; transform:translateX(0); }
+  }
+
+  /* Card body reveal */
+  .card {
+    animation: cardReveal 0.4s ease both;
+  }
+  @keyframes cardReveal {
+    from { opacity:0; transform:translateY(10px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  /* Cancelled banner shake attention */
+  .cancelled-banner {
+    animation: bannerPulse 0.6s ease 0.8s both;
+  }
+  @keyframes bannerPulse {
+    0%  { border-color: rgba(255,140,0,0.15); }
+    50% { border-color: rgba(255,140,0,0.55); box-shadow:0 0 20px rgba(255,140,0,0.15); }
+    100%{ border-color: rgba(255,140,0,0.25); }
+  }
+
+  /* SCD cards slide in staggered */
+  .scd-card:nth-child(1) { animation: cardPop 0.3s ease 0.05s both; }
+  .scd-card:nth-child(2) { animation: cardPop 0.3s ease 0.10s both; }
+  .scd-card:nth-child(3) { animation: cardPop 0.3s ease 0.15s both; }
+  .scd-card:nth-child(4) { animation: cardPop 0.3s ease 0.20s both; }
+  .scd-card:nth-child(5) { animation: cardPop 0.3s ease 0.25s both; }
+
+  /* Podium steps pop up from bottom */
+  .lr-step {
+    animation: podiumUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  .lr-step:nth-child(1) { animation-delay: 0.15s; }
+  .lr-step:nth-child(2) { animation-delay: 0.05s; }
+  .lr-step:nth-child(3) { animation-delay: 0.25s; }
+  @keyframes podiumUp {
+    from { opacity:0; transform:translateY(20px) scale(0.9); }
+    to   { opacity:1; transform:translateY(0) scale(1); }
+  }
+
+  /* Live dot bigger on mobile */
+  .live-dot { width: 8px; height: 8px; }
+
+  /* Bigger touch targets */
+  .tab-btn { min-height: 40px; }
+  .rs-card  { min-height: 100px; }
+
+  /* Hero race name font boost */
+  .hero-race-name { font-size: clamp(1.3rem, 5vw, 2.2rem) !important; }
+
+  /* Smoother circuit img on mobile */
+  .hero-img-wrap { width: 100% !important; opacity: 0.18; }
+  .hero-img-wrap::before {
+    background: linear-gradient(to bottom,
+      var(--bg0) 0%, rgba(6,6,8,0.6) 30%,
+      rgba(6,6,8,0.6) 70%, var(--bg0) 100%) !important;
+  }
+}
