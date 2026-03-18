@@ -57,57 +57,66 @@
         min-height:auto !important;
         display:block !important;
         position:relative;
-        padding-bottom:0;
+        overflow:visible !important;
       }
       /* Foto bovenaan, vaste hoogte */
       .hero-img-wrap {
         position:relative !important;
         width:100% !important;
-        height:62vw !important;
-        min-height:220px;
-        max-height:340px;
+        height:58vw !important;
+        min-height:210px;
+        max-height:300px;
         right:auto !important; top:auto !important; bottom:auto !important;
         display:block;
         opacity:1 !important;
       }
       .hero-img-wrap::before {
         background: linear-gradient(to bottom,
-          transparent 0%,
-          transparent 40%,
-          rgba(6,6,8,0.6) 70%,
+          rgba(0,0,0,0.1) 0%,
+          transparent 30%,
+          rgba(6,6,8,0.55) 72%,
           var(--bg0) 100%
         ) !important;
       }
       [data-theme="light"] .hero-img-wrap::before {
         background: linear-gradient(to bottom,
-          transparent 0%,
-          transparent 40%,
-          rgba(242,242,245,0.65) 70%,
-          var(--bg0) 100%
+          rgba(0,0,0,0.05) 0%,
+          transparent 30%,
+          rgba(242,242,245,0.6) 72%,
+          rgba(242,242,245,1) 100%
         ) !important;
       }
-      .hero-img { opacity:1 !important; transform:none !important; }
-      .hero-img.ready { opacity:1 !important; }
-      /* Placeholder kleiner */
-      #hero-ph { font-size:3rem !important; }
-      /* Tekst direct onder de foto, negatieve margin zodat hij overlaps */
+      /* Image altijd zichtbaar op mobiel, ongeacht ready class */
+      .hero-img { opacity:1 !important; transform:none !important; transition:none !important; }
+      /* Tekst blok direct na foto, met -2rem overlap */
       .hero-content {
         position:relative !important;
         z-index:3 !important;
-        padding:0 1.1rem 1.25rem !important;
-        margin-top:-3.5rem !important;
+        padding:0 1.1rem 1.5rem !important;
+        margin-top:-2rem !important;
         max-width:100% !important;
         display:block !important;
       }
       .hero-bg { display:none; }
       .scroll-hint { display:none !important; }
-      /* Race naam groot */
-      .hero-race-name { font-size:clamp(1.7rem,7vw,2.5rem) !important; line-height:1 !important; }
-      .hero-tag { margin-bottom:0.3rem !important; font-size:0.56rem !important; }
+      .hero-title { display:none !important; }
+      /* Race naam groot en altijd zichtbaar */
+      .hero-race-name {
+        font-size:clamp(1.7rem,7.5vw,2.5rem) !important;
+        line-height:1 !important;
+        margin-top:0 !important;
+        margin-bottom:0.2rem !important;
+      }
+      .hero-tag { margin-bottom:0.25rem !important; font-size:0.56rem !important; }
       .hero-circuit-txt { font-size:0.7rem !important; margin-bottom:0.65rem !important; }
       .hero-cd { gap:0.8rem !important; margin-bottom:0.65rem !important; }
       .hcd-num { font-size:clamp(2rem,9vw,3rem) !important; letter-spacing:-2px !important; }
       .hcd-sep { font-size:clamp(1.5rem,7vw,2.2rem) !important; }
+      .hcd-lbl { font-size:0.48rem !important; letter-spacing:2px !important; }
+      .hero-pills { margin-bottom:0.5rem !important; gap:0.2rem !important; }
+      .hs-pill { font-size:0.52rem !important; padding:2px 6px !important; }
+      #h-weather { max-width:100% !important; padding:0.6rem 0.7rem !important; margin-top:0.4rem !important; }
+    }
       .hcd-lbl { font-size:0.48rem !important; letter-spacing:2px !important; }
       .hero-pills { margin-bottom:0.5rem !important; gap:0.2rem !important; }
       .hs-pill { font-size:0.52rem !important; padding:2px 6px !important; }
@@ -245,7 +254,9 @@
   <div class="hero-bg"></div>
   <!-- Circuit foto fullscreen -->
   <div class="hero-img-wrap">
-    <div id="hero-ph" style="position:absolute;inset:0;background:linear-gradient(180deg,var(--bg1) 0%,var(--bg0) 100%);"></div>
+    <div id="hero-ph" style="position:absolute;inset:0;background:linear-gradient(160deg,#1a0505 0%,#0d0005 40%,#060608 100%);display:flex;align-items:center;justify-content:center;">
+      <svg width="120" height="120" viewBox="0 0 120 120" opacity="0.08"><circle cx="60" cy="60" r="56" fill="#e10600"/><path d="M30 60h60M60 30v60" stroke="white" stroke-width="10" stroke-linecap="round"/><circle cx="60" cy="60" r="14" fill="white"/></svg>
+    </div>
     <img id="hero-img" class="hero-img" src="" alt="">
     <div class="hero-img-label" id="hero-img-label"></div>
   </div>
@@ -604,7 +615,7 @@ loadStandings();
       <span style="font-family:var(--font-display);font-size:1rem;font-weight:900;letter-spacing:-0.5px">F1<span style="color:var(--red)">FOR</span>LIVE</span>
     </div>
     <div style="font-size:0.75rem;color:var(--txt3);text-align:center">
-      Made with ❤️ by <strong style="color:var(--txt2)">admin@ssel</strong> · Data via Jolpica & OpenF1 · Geen officiële F1-affiliatie
+      Made with ❤️ by <strong style="color:var(--txt2)">admin@ssel</strong> · Data via Jolpica & OpenF1 · Geen officiële F1-affiliatie · <a href="https://github.com/tyg01132-netizen/live-f1-stats-app." target="_blank" style="color:var(--red);text-decoration:none">GitHub</a>
     </div>
     <div style="display:flex;gap:1rem;font-family:var(--font-display);font-size:0.65rem;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--txt3)">
       <a href="/map" style="color:inherit;text-decoration:none;transition:color 0.2s" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--txt3)'">Kaart</a>

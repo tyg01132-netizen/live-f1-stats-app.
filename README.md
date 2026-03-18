@@ -1,68 +1,74 @@
 # 🏎 F1FORLIVE
 
-> Live Formule 1 dashboard — standen, kalender, race-uitslagen, live timing en meer.
+> Live Formule 1 dashboard — standen, kalender, race-uitslagen, live timing, weer en meer.
 
+[![Live](https://img.shields.io/badge/🌐_Live-f1forlive.onrender.com-e10600?style=flat-square)](https://f1forlive.onrender.com)
 ![Python](https://img.shields.io/badge/Python-3.9+-blue?style=flat-square&logo=python)
 ![Flask](https://img.shields.io/badge/Flask-3.x-black?style=flat-square&logo=flask)
-![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)
+
+---
+
+## 🌐 Live
+
+**[f1forlive.onrender.com](https://f1forlive.onrender.com)**
 
 ---
 
 ## 📸 Wat is het?
 
-F1FORLIVE is een volledig zelfgebouwd F1 dashboard gemaakt met Python (Flask) en vanilla JavaScript. Alle data komt live van de officiële F1 APIs — geen database, geen login, gewoon opstarten en kijken.
-
-**Pagina's:**
-
-| Pagina | Inhoud |
-|--------|--------|
-| `/` | Homepage — volgende race, countdown, standen |
-| `/calendar` | Volledige seizoenskalender + ICS export |
-| `/race/2026/1` | Race uitslag, kwalificatie, pitstops, sectortijden |
-| `/stats` | Seizoensstatistieken — winnaars, poles, snelste rondes |
-| `/live` | Live timing tijdens sessies via OpenF1 |
-| `/map` | Wereldkaart met alle circuits |
-| `/compare` | Coureur- en seizoenvergelijker |
-| `/predictor` | Kampioenschapsprognose |
-| `/timeline` | F1 geschiedenis 1950–2026 + kalender export |
-| `/info` | Circuits, coureurs, teams, uitzendgids |
-| `/history` | Archief — elk seizoen terug tot 1950 |
-| `/f2` | Formule 2 data |
+F1FORLIVE is een volledig zelfgebouwd F1 dashboard met Python (Flask) en vanilla JavaScript. Alle data komt live van gratis F1 APIs — geen database, geen login, gewoon opstarten en kijken. Volledig responsive voor mobiel en desktop, met dark/light mode.
 
 ---
 
-## ⚙️ Installatie (lokaal)
+## 📄 Pagina's
 
-**Vereisten:** Python 3.9+
+| URL | Inhoud |
+|-----|--------|
+| `/` | Homepage — volgende race, circuit foto, countdown, weer + strategie, standen |
+| `/calendar` | Volledige seizoenskalender + ICS export |
+| `/race/2026/3` | Race uitslag, kwalificatie, pitstops, sectortijden, speed trap, replay |
+| `/stats` | Seizoensstatistieken — winnaars, poles, snelste rondes |
+| `/live` | Live timing + YouTube stream |
+| `/map` | Wereldkaart met alle circuits (Leaflet.js) |
+| `/compare` | Coureur- en seizoenvergelijker |
+| `/predictor` | Kampioenschapsprognose |
+| `/simulator` | "What-if" simulator — vul zelf raceuitslagen in |
+| `/timeline` | F1 geschiedenis 1950–2026 + kalender export + countdown widget |
+| `/info` | Circuits, coureurs, teams, reglementen, uitzendgids |
+| `/history` | Archief — elk seizoen terug tot 1950 |
+| `/f2` | Formule 2 data |
+| `/widget/countdown` | Embeddable countdown widget (iframe) |
+
+---
+
+## ⚠️ 2026 — Afgelaste races
+
+De **Bahrein GP** (12 apr) en **Saoedi-Arabische GP** (19 apr) zijn officieel afgelast vanwege het conflict in het Midden-Oosten. Het seizoen 2026 telt **22 races**.
+
+---
+
+## ⚙️ Lokaal draaien
 
 ```bash
-# 1. Clone de repo
-git clone https://github.com/tyg01132-netizen/f1-dashboard.git
-cd f1-dashboard
-
-# 2. Installeer packages
+git clone https://github.com/tyg01132-netizen/live-f1-stats-app.
+cd live-f1-stats-app.
 pip install -r requirements.txt
-
-# 3. Start de app
 python app.py
 ```
 
-Open daarna **http://localhost:5000** in je browser.
+Open **http://localhost:5000**
 
 ---
 
-## 🚀 Deployment (Render)
+## 🚀 Deployment
 
-De repo bevat een `render.yaml` — Render pikt dit automatisch op.
+Gehost op **[Render.com](https://render.com)** via `render.yaml`:
 
-1. Push naar GitHub
-2. Render → New Web Service → koppel deze repo
-3. Render deployt automatisch via:
-   ```
-   gunicorn app:app --workers 2 --timeout 60
-   ```
+```
+gunicorn app:app --workers 2 --timeout 60
+```
 
-Live URL: **https://f1forlive.onrender.com**
+Elke push naar `main` deployt automatisch.
 
 ---
 
@@ -70,54 +76,36 @@ Live URL: **https://f1forlive.onrender.com**
 
 | Bron | Wat |
 |------|-----|
-| [Jolpica/Ergast API](https://api.jolpi.ca) | Standen, resultaten, kalender, kwalificatie |
-| [OpenF1 API](https://openf1.org) | Live timing, sectortijden, snelheidstrap, pitstops |
-| [wttr.in](https://wttr.in) | Weerdata per circuit |
-| [Wikipedia REST API](https://en.wikipedia.org/api) | Circuit foto's |
+| [Jolpica/Ergast](https://api.jolpi.ca) | Standen, resultaten, kalender, kwalificatie |
+| [OpenF1](https://openf1.org) | Live timing, sectortijden, pitstops, snelheidstrap |
+| [wttr.in](https://wttr.in) | Weervoorspelling per circuit + strategie-advies |
+| [Wikipedia REST API](https://en.wikipedia.org/api) | Circuit fotos |
 
-Alle APIs zijn gratis en vereisen geen API key.
-
----
-
-## ⚠️ 2026 Seizoen — Afgelaste races
-
-De **Bahrein Grand Prix** (12 april) en **Saoedi-Arabische Grand Prix** (19 april) zijn officieel afgelast vanwege het conflict in het Midden-Oosten. Het seizoen 2026 telt daardoor **22 races** in plaats van 24.
+Alle APIs zijn **gratis** en vereisen **geen API key**.
 
 ---
 
-## 📁 Structuur
+## ✨ Features
 
-```
-f1-dashboard/
-├── app.py              ← Flask backend + alle API routes
-├── requirements.txt
-├── render.yaml         ← Render deployment config
-├── templates/          ← HTML pagina's (Jinja2)
-│   ├── index.html
-│   ├── race.html
-│   ├── calendar.html
-│   └── ...
-└── static/
-    ├── app.js          ← Gedeelde JS (helpers, flags, fetch)
-    ├── style.css       ← Alle styling
-    └── favicon.svg
-```
+- 🌙 Dark / Light mode (volgt systeeminstellingen)
+- 📱 Volledig mobiel responsive
+- ⚡ Server-side cache (5-30 min TTL)
+- 🌤 Weervoorspelling + bandenstrategie per race
+- 🏆 Kampioenschap "what-if" simulator
+- 📅 ICS kalender export
+- 🔗 Embeddable countdown widget
+- 🔔 Push notificaties voor sessieherinneringen
+- 🗺 Interactieve wereldkaart (Leaflet.js)
+- 📺 Live F1 YouTube stream embed
 
 ---
 
 ## 🛠 Tech stack
 
-- **Backend:** Python 3 · Flask · Gunicorn
-- **Frontend:** Vanilla HTML/CSS/JS · Barlow Condensed font · Leaflet.js (kaarten)
-- **Hosting:** Render (free tier)
-- **Cache:** In-memory server-side cache (5–30 min TTL per endpoint)
+**Backend:** Python 3 · Flask · Gunicorn
+**Frontend:** Vanilla HTML/CSS/JS · Barlow Condensed · Leaflet.js
+**Hosting:** Render (free tier)
 
 ---
 
-## 📄 Licentie
-
-MIT — doe er mee wat je wil.
-
----
-
-*Gebouwd door [@tyg01132-netizen](https://github.com/tyg01132-netizen)*
+*Made with ❤️ by admin@ssel*
