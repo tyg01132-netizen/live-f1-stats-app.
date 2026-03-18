@@ -1596,23 +1596,77 @@ def api_race_positions(year, round_num):
 # ── API: Homepage weather + strategy ─────────────────────────────────────────
 @app.route("/api/race-strategy/<circuit_id>")
 def api_race_strategy(circuit_id):
-    """Weather + tyre strategy advice for a circuit."""
+    """Weather + tyre strategy advice for a circuit — uses race weekend forecast."""
     try:
         city = CIRCUIT_CITIES.get(circuit_id, circuit_id.replace("_"," ").title())
+        # Get next race date to find the right forecast day
+        race_date_str = request.args.get("race_date","")
         r = requests.get(f"https://wttr.in/{city}?format=j1",
                          headers={"User-Agent":"F1Dashboard/3.0"}, timeout=8)
         if r.status_code != 200:
             return jsonify({"error":"Weerdata niet beschikbaar"})
         d = r.json()
-        cur = d.get("current_condition",[{}])[0]
-        today = d.get("weather",[{}])[0]
-        hourly = today.get("hourly",[])
+        # wttr.in returns 3 days: today [0], tomorrow [1], day after [2]
+        # Pick the day closest to the race date
+        weather_days = d.get("weather",[])
+        target_day = weather_days[0] if weather_days else {}
+        days_until = 0
+        is_forecast = False
+        if race_date_str and len(weather_days) > 1:
+            try:
+                race_dt = datetime.strptime(race_date_str, "%Y-%m-%d").date()
+                today_dt = datetime.utcnow().date()
+                days_until = (race_dt - today_dt).days
+                if days_until <= 0:
+                    target_day = weather_days[0]  # race already passed, use today
+                elif days_until == 1 and len(weather_days) > 1:
+                    target_day = weather_days[1]
+                    is_forecast = True
+                elif days_until >= 2 and len(weather_days) > 2:
+                    target_day = weather_days[2]
+                    is_forecast = True
+                elif days_until > 2:
+                    # Race too far away - use day 2 as best approximation
+                    target_day = weather_days[-1]
+                    is_forecast = True
+            except: pass
 
-        temp = int(cur.get("temp_C",20))
+        cur = d.get("current_condition",[{}])[0]
+        hourly = target_day.get("hourly",[])
+
+        # If race is more than 3 days away, wttr.in can't give accurate forecast
+        if days_until > 3 and is_forecast:
+            race_date_nice = race_date_str if race_date_str else "de race"
+            return jsonify({
+                "city": city,
+                "too_far": True,
+                "days_until": days_until,
+                "message": f"Weersverwachting voor {city} is pas beschikbaar ~3 dagen voor de race.",
+                "temp_c": int(cur.get("temp_C", 20)),
+                "desc": (cur.get("weatherDesc") or [{}])[0].get("value",""),
+                "weather_code": cur.get("weatherCode","113"),
+                "rain_chance": 0,
+                "wind_kmph": int(cur.get("windspeedKmph",0)),
+                "strategies": [{
+                    "icon": "📅",
+                    "title": f"Race over {days_until} dagen",
+                    "desc": f"Weersverwachting voor {city} verschijnt ~3 dagen voor de race. Nu huidig weer getoond.",
+                    "type": "info"
+                }],
+                "is_forecast": False,
+                "forecast": []
+            })
+
+        # Use race-day max temp, not current temp
+        race_day_temps = [int(h.get("tempC", cur.get("temp_C",20))) for h in hourly]
+        race_day_max = max(race_day_temps) if race_day_temps else int(cur.get("temp_C",20))
+
+        temp = race_day_max
         humidity = int(cur.get("humidity",50))
-        wind = int(cur.get("windspeedKmph",0))
-        rain_chance = max(int(h.get("chanceofrain",0)) for h in hourly) if hourly else 0
-        code = int(cur.get("weatherCode",113))
+        wind = int(max((int(h.get("windspeedKmph",0)) for h in hourly), default=int(cur.get("windspeedKmph",0))))
+        rain_chance = max((int(h.get("chanceofrain",0)) for h in hourly), default=0)
+        afternoon = hourly[len(hourly)//2] if hourly else {}
+        code = int(afternoon.get("weatherCode", cur.get("weatherCode",113)))
 
         # Determine condition
         is_rain = code in [176,185,263,266,281,284,293,296,299,302,305,308,
@@ -1674,14 +1728,18 @@ def api_race_strategy(circuit_id):
                 "type": "warning"
             })
 
+        # Use race-day afternoon weather description
+        afternoon_desc = (afternoon.get("weatherDesc") or [{}])[0].get("value","") if afternoon else (cur.get("weatherDesc") or [{}])[0].get("value","")
         return jsonify({
             "city": city,
+            "days_until": days_until,
+            "is_forecast": is_forecast,
             "temp_c": temp,
             "humidity": humidity,
             "wind_kmph": wind,
             "rain_chance": rain_chance,
-            "desc": (cur.get("weatherDesc") or [{}])[0].get("value",""),
-            "weather_code": cur.get("weatherCode",""),
+            "desc": afternoon_desc,
+            "weather_code": code,
             "strategies": strategies,
             "forecast": [
                 {
@@ -1772,3 +1830,36 @@ def api_simulator_standings():
     except Exception as e:
         print(f"[simulator] ERR: {e}")
         return jsonify({})
+
+# ── SEO: sitemap.xml ──────────────────────────────────────────────────────────
+@app.route("/sitemap.xml")
+def sitemap():
+    pages = [
+        ("https://f1forlive.onrender.com/", "daily", "1.0"),
+        ("https://f1forlive.onrender.com/calendar", "weekly", "0.9"),
+        ("https://f1forlive.onrender.com/stats", "daily", "0.9"),
+        ("https://f1forlive.onrender.com/live", "always", "0.8"),
+        ("https://f1forlive.onrender.com/map", "weekly", "0.8"),
+        ("https://f1forlive.onrender.com/compare", "weekly", "0.7"),
+        ("https://f1forlive.onrender.com/predictor", "daily", "0.8"),
+        ("https://f1forlive.onrender.com/simulator", "daily", "0.8"),
+        ("https://f1forlive.onrender.com/timeline", "monthly", "0.6"),
+        ("https://f1forlive.onrender.com/history", "monthly", "0.6"),
+        ("https://f1forlive.onrender.com/info", "monthly", "0.7"),
+        ("https://f1forlive.onrender.com/f2", "daily", "0.7"),
+    ]
+    today = datetime.utcnow().strftime("%Y-%m-%d")
+    xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+    xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+    for url, freq, prio in pages:
+        xml += f"  <url><loc>{url}</loc><lastmod>{today}</lastmod><changefreq>{freq}</changefreq><priority>{prio}</priority></url>\n"
+    xml += "</urlset>"
+    from flask import Response
+    return Response(xml, mimetype="application/xml")
+
+# ── SEO: robots.txt ───────────────────────────────────────────────────────────
+@app.route("/robots.txt")
+def robots():
+    txt = "User-agent: *\nAllow: /\nSitemap: https://f1forlive.onrender.com/sitemap.xml\n"
+    from flask import Response
+    return Response(txt, mimetype="text/plain")

@@ -1889,3 +1889,83 @@ body { animation: bodyFadeIn 0.35s ease both; }
   .rec-card .rec-lbl { font-size: 0.68rem !important; }
   .rec-card .rec-who { font-size: 0.6rem !important; }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   NAV DROPDOWN — Analyse menu
+   ══════════════════════════════════════════════════════════════════════════════ */
+.nav-dropdown { position: relative; }
+.nav-dropdown-trigger {
+  font-family: var(--font-display);
+  font-size: 0.8rem; font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 0.4rem 0.75rem;
+  border-radius: 5px;
+  color: var(--txt3);
+  cursor: pointer;
+  display: flex; align-items: center; gap: 4px;
+  transition: color 0.15s, background 0.15s;
+  white-space: nowrap;
+}
+.nav-dropdown-trigger:hover,
+.nav-dropdown-trigger.active { color: var(--txt); background: var(--bg3); }
+.nav-dropdown-trigger .arrow {
+  font-size: 0.5rem; opacity: 0.5;
+  transition: transform 0.2s;
+  display: inline-block;
+}
+.nav-dropdown:hover .arrow,
+.nav-dropdown.open .arrow { transform: rotate(180deg); }
+
+.nav-dropdown-menu {
+  display: none;
+  position: absolute; top: calc(100% + 6px); left: 0;
+  background: rgba(13,13,16,0.98);
+  border: 1px solid var(--border2);
+  border-radius: var(--r2);
+  min-width: 160px;
+  z-index: 300;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  backdrop-filter: blur(16px);
+  overflow: hidden;
+  padding: 4px 0;
+}
+.nav-dropdown:hover .nav-dropdown-menu,
+.nav-dropdown.open .nav-dropdown-menu { display: block; }
+.nav-dropdown-menu a {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 0.78rem; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase;
+  padding: 0.55rem 1rem;
+  color: var(--txt3);
+  text-decoration: none;
+  transition: color 0.15s, background 0.15s;
+}
+.nav-dropdown-menu a:hover { color: var(--txt); background: var(--bg3); }
+.nav-dropdown-menu a.active-red { color: var(--red); }
+
+[data-theme="light"] .nav-dropdown-menu {
+  background: rgba(242,242,245,0.98);
+}
+
+/* On mobile — dropdown becomes flat items in the overlay */
+@media (max-width: 860px) {
+  .nav-dropdown { position: static; }
+  .nav-dropdown-trigger { display: none; }
+  .nav-dropdown-menu {
+    display: block !important;
+    position: static;
+    background: none;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    min-width: unset;
+    backdrop-filter: none;
+  }
+  .nav-dropdown-menu a {
+    padding: 0.75rem 1.5rem 0.75rem 2rem;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 0.85rem;
+  }
+  .nav-dropdown-menu a::before { content: '— '; opacity: 0.3; }
+}
