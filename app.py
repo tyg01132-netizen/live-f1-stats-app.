@@ -1863,3 +1863,7 @@ def robots():
     txt = "User-agent: *\nAllow: /\nSitemap: https://f1forlive.onrender.com/sitemap.xml\n"
     from flask import Response
     return Response(txt, mimetype="text/plain")
+
+@app.route("/google170879bc78331920.html")
+def google_verify():
+    return "google-site-verification: google170879bc78331920.html"
