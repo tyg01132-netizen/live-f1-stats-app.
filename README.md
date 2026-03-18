@@ -1,8 +1,8 @@
-# 🏎 F1FORLIVE
+# 🏎 F1FORLIFE
 
 > Live Formule 1 dashboard — standen, kalender, race-uitslagen, live timing, weer en meer.
 
-[![Live](https://img.shields.io/badge/🌐_Live-f1forlive.onrender.com-e10600?style=flat-square)](https://f1forlive.onrender.com)
+[![Live](https://img.shields.io/badge/🌐_Live-f1forlife.onrender.com-e10600?style=flat-square)](https://f1forlife.onrender.com)
 ![Python](https://img.shields.io/badge/Python-3.9+-blue?style=flat-square&logo=python)
 ![Flask](https://img.shields.io/badge/Flask-3.x-black?style=flat-square&logo=flask)
 
@@ -10,13 +10,13 @@
 
 ## 🌐 Live
 
-**[f1forlive.onrender.com](https://f1forlive.onrender.com)**
+**[f1forlife.onrender.com](https://f1forlife.onrender.com)**
 
 ---
 
 ## 📸 Wat is het?
 
-F1FORLIVE is een volledig zelfgebouwd F1 dashboard met Python (Flask) en vanilla JavaScript. Alle data komt live van gratis F1 APIs — geen database, geen login, gewoon opstarten en kijken. Volledig responsive voor mobiel en desktop, met dark/light mode.
+F1FORLIFE is een volledig zelfgebouwd F1 dashboard met Python (Flask) en vanilla JavaScript. Alle data komt live van gratis F1 APIs — geen database, geen login, gewoon opstarten en kijken. Volledig responsive voor mobiel en desktop, met dark/light mode.
 
 ---
 

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg?v=9">
   <link rel="shortcut icon" href="/static/favicon.svg?v=9"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tijdlijn & Export — F1FORLIVE</title>
+  <title>Tijdlijn & Export — F1FORLIFE</title>
     <title>F1 Tijdlijn & Kalender Export</title>
   <meta name="description" content="F1 geschiedenis 1950–2026 + download het seizoen als .ics bestand.">
   <meta property="og:title" content="F1 Tijdlijn & Kalender Export">
@@ -39,7 +39,7 @@
 <nav class="topnav">
   <a class="nav-logo" href="/" style="display:flex;align-items:center;gap:8px">
     <svg width="26" height="26" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="13" fill="#e10600"/><path d="M7 14h14M14 7v14" stroke="white" stroke-width="2.5" stroke-linecap="round"/><circle cx="14" cy="14" r="3" fill="white"/></svg>
-    <span style="font-family:var(--font-display);font-size:1.25rem;font-weight:900;letter-spacing:-0.5px">F1<span style="color:var(--red)">FOR</span>LIVE</span>
+    <span style="font-family:var(--font-display);font-size:1.25rem;font-weight:900;letter-spacing:-0.5px">F1<span style="color:var(--red)">FOR</span>LIFE</span>
   </a>
   <ul class="nav-links" id="nav-links">
     <li><a href="/">Home</a></li><li><a href="/stats">Stats 2026</a></li>
@@ -120,7 +120,7 @@
       <div style="background:var(--bg2);border:1px solid rgba(39,244,210,0.2);border-radius:var(--r2);padding:1.25rem">
         <div style="font-family:var(--font-display);font-size:1rem;font-weight:900;margin-bottom:0.4rem">🔗 Countdown Widget — embed op je eigen site</div>
         <div style="font-size:0.82rem;color:var(--txt2);margin-bottom:1rem">Plak deze iframe code op je website of in Wix om een live countdown te tonen:</div>
-        <div style="background:var(--bg3);border-radius:var(--r);padding:0.85rem;font-family:var(--font-mono);font-size:0.72rem;color:var(--green);margin-bottom:1rem;overflow-x:auto;white-space:nowrap" id="widget-code">&lt;iframe src="https://f1forlive.onrender.com/widget/countdown" style="border:none;width:340px;height:60px" scrolling="no"&gt;&lt;/iframe&gt;</div>
+        <div style="background:var(--bg3);border-radius:var(--r);padding:0.85rem;font-family:var(--font-mono);font-size:0.72rem;color:var(--green);margin-bottom:1rem;overflow-x:auto;white-space:nowrap" id="widget-code">&lt;iframe src="https://f1forlife.onrender.com/widget/countdown" style="border:none;width:340px;height:60px" scrolling="no"&gt;&lt;/iframe&gt;</div>
         <div style="font-size:0.75rem;color:var(--txt3);margin-bottom:1rem">Preview:</div>
         <iframe src="/widget/countdown" style="border:none;width:340px;height:60px" scrolling="no"></iframe>
         <div style="margin-top:0.75rem">
@@ -235,10 +235,10 @@ el('gen-ics-btn').onclick = async () => {
   let lines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//F1FORLIVE//F1 Dashboard//NL',
+    'PRODID:-//F1FORLIFE//F1 Dashboard//NL',
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
-    `X-WR-CALNAME:F1FORLIVE ${new Date().getFullYear()}`,
+    `X-WR-CALNAME:F1FORLIFE ${new Date().getFullYear()}`,
     'X-WR-TIMEZONE:Europe/Amsterdam',
   ];
 
@@ -253,7 +253,7 @@ el('gen-ics-btn').onclick = async () => {
 
   function addEvent(uid, summary, dtstart, dtend, location, desc) {
     lines.push('BEGIN:VEVENT');
-    lines.push(`UID:${uid}@f1forlive`);
+    lines.push(`UID:${uid}@f1forlife`);
     lines.push(`SUMMARY:${summary}`);
     lines.push(`DTSTART:${dtstart}`);
     lines.push(`DTEND:${dtend}`);

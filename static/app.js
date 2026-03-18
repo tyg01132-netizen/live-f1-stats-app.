@@ -198,7 +198,7 @@ window.F1Notif = {
       const lbl = labels[key] || key;
       // 1hr before
       const delay1 = t - HOUR - now;
-      if (delay1 > 0) this.schedule(`🏎 ${lbl} over 1 uur`, `F1FORLIVE — ${lbl} begint om ${new Date(t).toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'})}`, delay1);
+      if (delay1 > 0) this.schedule(`🏎 ${lbl} over 1 uur`, `F1FORLIFE — ${lbl} begint om ${new Date(t).toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'})}`, delay1);
     });
   },
 

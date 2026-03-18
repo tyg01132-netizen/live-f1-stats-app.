@@ -8,28 +8,28 @@
   <meta name="theme-color" content="#e10600">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="description" content="F1FORLIVE — Live Formule 1 dashboard met standen, kalender, race-uitslagen, countdown en meer. Seizoen 2026.">
+  <meta name="description" content="F1FORLIFE Formule 1 dashboard met standen, kalender, race-uitslagen, countdown en meer. Seizoen 2026.">
   <meta name="keywords" content="Formule 1, F1, Grand Prix, standen, kalender, live, 2026, racing">
   <meta name="robots" content="index, follow">
-  <meta property="og:title" content="F1FORLIVE — Live F1 Dashboard">
+  <meta property="og:title" content="F1FORLIFE F1 Dashboard">
   <meta property="og:description" content="Live Formule 1 standen, kalender, race-uitslagen en countdown voor het 2026 seizoen.">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://f1forlive.onrender.com">
-  <meta property="og:image" content="https://f1forlive.onrender.com/static/favicon.svg">
+  <meta property="og:url" content="https://f1forlife.onrender.com">
+  <meta property="og:image" content="https://f1forlife.onrender.com/static/favicon.svg">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="F1FORLIVE">
+  <meta name="twitter:title" content="F1FORLIFE">
   <meta name="twitter:description" content="Live F1 standen, kalender en countdown — seizoen 2026">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>F1FORLIVE — Live Formule 1 Dashboard {{ year }}</title>
+  <title>F1FORLIFE Formule 1 Dashboard {{ year }}</title>
   <meta name="description" content="Live F1 standen, race-uitslagen, countdown, kalender en meer. Het beste Formule 1 dashboard voor seizoen {{ year }}.">
   <meta name="keywords" content="F1, Formule 1, live standen, race resultaten, F1 kalender, Grand Prix, 2026">
-  <meta property="og:title" content="F1FORLIVE — Live Formule 1 Dashboard">
+  <meta property="og:title" content="F1FORLIFE Formule 1 Dashboard">
   <meta property="og:description" content="Live standen, race-uitslagen, countdown en meer voor het F1 seizoen {{ year }}.">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://f1forlive.onrender.com">
-  <meta property="og:image" content="https://f1forlive.onrender.com/static/favicon.svg">
+  <meta property="og:url" content="https://f1forlife.onrender.com">
+  <meta property="og:image" content="https://f1forlife.onrender.com/static/favicon.svg">
   <meta name="robots" content="index, follow">
-  <link rel="canonical" href="https://f1forlive.onrender.com">
+  <link rel="canonical" href="https://f1forlife.onrender.com">
   <link rel="stylesheet" href="/static/style.css">
   <style>
     /* ── Hero desktop ── */
@@ -87,8 +87,11 @@
           rgba(242,242,245,1) 100%
         ) !important;
       }
-      /* Image altijd zichtbaar op mobiel, ongeacht ready class */
-      .hero-img { opacity:1 !important; transform:none !important; transition:none !important; }
+      /* Image altijd zichtbaar op mobiel */
+      .hero-img { opacity:0; transform:none !important; transition:opacity 0.5s ease !important; }
+      .hero-img.ready { opacity:1 !important; }
+      /* Placeholder vult de ruimte mooi op */
+      #hero-ph { background:linear-gradient(160deg,#1a0305 0%,#0a0005 50%,#060608 100%) !important; }
       /* Tekst blok direct na foto, met -2rem overlap */
       .hero-content {
         position:relative !important;
@@ -221,7 +224,7 @@
 <nav class="topnav">
   <a class="nav-logo" href="/" style="display:flex;align-items:center;gap:8px;text-decoration:none">
     <svg width="26" height="26" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="13" fill="#e10600"/><path d="M7 14h14M14 7v14" stroke="white" stroke-width="2.5" stroke-linecap="round"/><circle cx="14" cy="14" r="3" fill="white"/></svg>
-    <span style="font-family:var(--font-display);font-size:1.25rem;font-weight:900;letter-spacing:-0.5px">F1<span style="color:var(--red)">FOR</span>LIVE</span>
+    <span style="font-family:var(--font-display);font-size:1.25rem;font-weight:900;letter-spacing:-0.5px">F1<span style="color:var(--red)">FOR</span>LIFE</span>
   </a>
   <ul class="nav-links" id="nav-links">
     <li><a href="/" class="active">Home</a></li>
@@ -258,7 +261,7 @@
     <div id="hero-ph" style="position:absolute;inset:0;background:linear-gradient(160deg,#1a0505 0%,#0d0005 40%,#060608 100%);display:flex;align-items:center;justify-content:center;">
       <svg width="120" height="120" viewBox="0 0 120 120" opacity="0.08"><circle cx="60" cy="60" r="56" fill="#e10600"/><path d="M30 60h60M60 30v60" stroke="white" stroke-width="10" stroke-linecap="round"/><circle cx="60" cy="60" r="14" fill="white"/></svg>
     </div>
-    <img id="hero-img" class="hero-img" src="" alt="">
+    <img id="hero-img" class="hero-img" src="" alt="" style="display:none">
     <div class="hero-img-label" id="hero-img-label"></div>
   </div>
   <!-- Content over de foto -->
@@ -441,11 +444,13 @@ function loadCircuitImg(circuitId, circuitName) {
     if(!ph?.url) return;
     const img = el('hero-img');
     if(!img) return;
+    img.style.display = 'block';
     img.onload = ()=>{
       img.classList.add('ready');
       const ph2 = el('hero-ph'); if(ph2) ph2.style.display='none';
       const lbl = el('hero-img-label'); if(lbl) lbl.textContent=circuitName||'';
     };
+    img.onerror = ()=>{ img.style.display='none'; };
     img.src = ph.url;
   });
 }
@@ -613,7 +618,7 @@ loadStandings();
   <div style="max-width:1440px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
     <div style="display:flex;align-items:center;gap:8px">
       <svg width="20" height="20" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="13" fill="#e10600"/><path d="M8 16h16M16 8v16" stroke="white" stroke-width="2.8" stroke-linecap="round"/><circle cx="16" cy="16" r="3.5" fill="white"/></svg>
-      <span style="font-family:var(--font-display);font-size:1rem;font-weight:900;letter-spacing:-0.5px">F1<span style="color:var(--red)">FOR</span>LIVE</span>
+      <span style="font-family:var(--font-display);font-size:1rem;font-weight:900;letter-spacing:-0.5px">F1<span style="color:var(--red)">FOR</span>LIFE</span>
     </div>
     <div style="font-size:0.75rem;color:var(--txt3);text-align:center">
       Made with ❤️ by <strong style="color:var(--txt2)">admin@ssel</strong> · Data via Jolpica & OpenF1 · Geen officiële F1-affiliatie · <a href="https://github.com/tyg01132-netizen/live-f1-stats-app." target="_blank" style="color:var(--red);text-decoration:none">GitHub</a>

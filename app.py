@@ -1285,7 +1285,7 @@ def api_calendar_ics():
         lines = [
             "BEGIN:VCALENDAR",
             "VERSION:2.0",
-            "PRODID:-//F1FORLIVE//F1 Calendar//NL",
+            "PRODID:-//F1FORLIFE//F1 Calendar//NL",
             "CALSCALE:GREGORIAN",
             "METHOD:PUBLISH",
             f"X-WR-CALNAME:F1 Seizoen {year}",
@@ -1305,7 +1305,7 @@ def api_calendar_ics():
 
         for race in races:
             rd = race.get("date", ""); rt = race.get("time", "").replace("Z", "")
-            cid = f"race-{year}-{race['round']}@f1forlive"
+            cid = f"race-{year}-{race['round']}@f1forlife"
             name = ics_str(race.get("raceName", ""))
             circuit = ics_str(race["Circuit"]["circuitName"])
             country = ics_str(race["Circuit"]["Location"]["country"])
@@ -1329,7 +1329,7 @@ def api_calendar_ics():
                 qd = race["Qualifying"].get("date", ""); qt = race["Qualifying"].get("time", "").replace("Z", "")
                 lines += [
                     "BEGIN:VEVENT",
-                    f"UID:quali-{year}-{race['round']}@f1forlive",
+                    f"UID:quali-{year}-{race['round']}@f1forlife",
                     f"DTSTAMP:{datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')}",
                     f"DTSTART:{ics_dt(qd, qt)}",
                     f"DTEND:{ics_dt(qd, (datetime.strptime(qt,'%H:%M:%S')+__import__('datetime').timedelta(hours=1)).strftime('%H:%M:%S') if qt else '13:00:00')}",
@@ -1835,18 +1835,18 @@ def api_simulator_standings():
 @app.route("/sitemap.xml")
 def sitemap():
     pages = [
-        ("https://f1forlive.onrender.com/", "daily", "1.0"),
-        ("https://f1forlive.onrender.com/calendar", "weekly", "0.9"),
-        ("https://f1forlive.onrender.com/stats", "daily", "0.9"),
-        ("https://f1forlive.onrender.com/live", "always", "0.8"),
-        ("https://f1forlive.onrender.com/map", "weekly", "0.8"),
-        ("https://f1forlive.onrender.com/compare", "weekly", "0.7"),
-        ("https://f1forlive.onrender.com/predictor", "daily", "0.8"),
-        ("https://f1forlive.onrender.com/simulator", "daily", "0.8"),
-        ("https://f1forlive.onrender.com/timeline", "monthly", "0.6"),
-        ("https://f1forlive.onrender.com/history", "monthly", "0.6"),
-        ("https://f1forlive.onrender.com/info", "monthly", "0.7"),
-        ("https://f1forlive.onrender.com/f2", "daily", "0.7"),
+        ("https://f1forlife.onrender.com/", "daily", "1.0"),
+        ("https://f1forlife.onrender.com/calendar", "weekly", "0.9"),
+        ("https://f1forlife.onrender.com/stats", "daily", "0.9"),
+        ("https://f1forlife.onrender.com/live", "always", "0.8"),
+        ("https://f1forlife.onrender.com/map", "weekly", "0.8"),
+        ("https://f1forlife.onrender.com/compare", "weekly", "0.7"),
+        ("https://f1forlife.onrender.com/predictor", "daily", "0.8"),
+        ("https://f1forlife.onrender.com/simulator", "daily", "0.8"),
+        ("https://f1forlife.onrender.com/timeline", "monthly", "0.6"),
+        ("https://f1forlife.onrender.com/history", "monthly", "0.6"),
+        ("https://f1forlife.onrender.com/info", "monthly", "0.7"),
+        ("https://f1forlife.onrender.com/f2", "daily", "0.7"),
     ]
     today = datetime.utcnow().strftime("%Y-%m-%d")
     xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -1860,7 +1860,7 @@ def sitemap():
 # ── SEO: robots.txt ───────────────────────────────────────────────────────────
 @app.route("/robots.txt")
 def robots():
-    txt = "User-agent: *\nAllow: /\nSitemap: https://f1forlive.onrender.com/sitemap.xml\n"
+    txt = "User-agent: *\nAllow: /\nSitemap: https://f1forlife.onrender.com/sitemap.xml\n"
     from flask import Response
     return Response(txt, mimetype="text/plain")
 
